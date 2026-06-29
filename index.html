@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>TennisEye</title>
+<style>
+:root{
+  --accent:#c8f53a;--red:#ef4444;--amber:#eab308;--green:#22c55e;
+  --blue:#3b82f6;--orange:#f97316;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#000;color:#fff;
+  font-family:system-ui,-apple-system,'SF Pro Text',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:none;
+  user-select:none;
+  /* iOS: evita bounce scroll */
+  position:fixed;
+  overscroll-behavior:none;
+}
+button{
+  font-family:inherit;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  /* iOS: remove estilo nativo de botão */
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+/* ── CÂMERA ── */
+#video{
+  position:fixed;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+  background:#000;
+  z-index:1;
+}
+#canvas{
+  position:fixed;inset:0;
+  width:100%;height:100%;
+  z-index:2;
+  pointer-events:none;
+}
+/* canvas fica clicável durante calibração */
+#canvas.cal-active{pointer-events:all;cursor:crosshair}
+
+/* ── TELAS ── */
+.screen{
+  position:fixed;inset:0;
+  z-index:10;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(0,0,0,.92);
+  padding:24px;
+  gap:16px;
+  transition:opacity .25s;
+}
+.screen.off{opacity:0;pointer-events:none}
+
+/* ── TELA INICIAL ── */
+#sc-home{text-align:center;gap:20px}
+.logo{font-size:48px;font-weight:700;letter-spacing:-2px}
+.logo span{color:var(--accent)}
+.tagline{font-size:15px;color:rgba(255,255,255,.55);max-width:260px;line-height:1.5}
+.big-btn{
+  width:100%;max-width:320px;
+  padding:18px;border-radius:14px;
+  font-size:17px;font-weight:700;
+  border:none;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:60px;
+}
+.big-btn:active{opacity:.75;transform:scale(.97)}
+.btn-start{background:var(--accent);color:#000}
+.btn-guide{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.15)}
+.alert{
+  width:100%;max-width:320px;
+  padding:12px 16px;border-radius:10px;
+  font-size:13px;line-height:1.5;
+  border-left:3px solid;
+  text-align:left;
+}
+.alert-warn{background:rgba(234,179,8,.1);border-color:var(--amber);color:rgba(255,255,255,.8)}
+.alert-err{background:rgba(239,68,68,.1);border-color:var(--red);color:rgba(255,255,255,.8)}
+.alert-ok{background:rgba(34,197,94,.1);border-color:var(--green);color:rgba(255,255,255,.8)}
+
+/* ── TELA DE ERRO/PERMISSÃO ── */
+#sc-perm{text-align:center;gap:14px}
+.perm-icon{font-size:52px}
+.perm-title{font-size:22px;font-weight:700}
+.perm-body{font-size:14px;color:rgba(255,255,255,.55);max-width:280px;line-height:1.6}
+.perm-steps{width:100%;max-width:320px;text-align:left;display:flex;flex-direction:column;gap:8px}
+.perm-step{
+  padding:10px 14px;border-radius:10px;
+  background:rgba(255,255,255,.06);
+  font-size:13px;color:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.08);
+  line-height:1.5;
+}
+
+/* ── GUIA ── */
+#sc-guide{
+  background:rgba(0,0,0,.96);
+  justify-content:flex-start;
+  align-items:stretch;
+  padding:0;overflow-y:auto;
+  touch-action:pan-y;
+}
+.guide-top{
+  display:flex;align-items:center;gap:10px;
+  padding:max(env(safe-area-inset-top,16px),16px) 16px 14px;
+  background:rgba(0,0,0,.8);
+  position:sticky;top:0;z-index:5;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.back-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.1);border:none;
+  color:#fff;font-size:20px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.guide-scroll{padding:16px;display:flex;flex-direction:column;gap:20px}
+.gs-title{
+  font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--accent);
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:8px;
+}
+.gs-card{
+  border-radius:12px;border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);padding:14px;
+  margin-bottom:8px;
+}
+.gs-card-title{font-size:14px;font-weight:600;margin-bottom:5px}
+.gs-card-body{font-size:13px;color:rgba(255,255,255,.55);line-height:1.6}
+/* stickers */
+.sticker-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stk{
+  border-radius:12px;padding:14px 10px;
+  border:1.5px solid;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  text-align:center;
+}
+.stk-r{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
+.stk-y{border-color:rgba(234,179,8,.4);background:rgba(234,179,8,.06)}
+.stk-b{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.06)}
+.stk-circle{
+  border-radius:50%;
+  width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:15px;color:#000;
+}
+.stk-size{font-size:17px;font-weight:700;margin-top:2px}
+.stk-label{font-size:11px;color:rgba(255,255,255,.5);line-height:1.4}
+.stk-qty{
+  font-size:10px;font-weight:600;padding:2px 8px;
+  border-radius:100px;background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.5);
+}
+/* court diagram */
+.court-wrap{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:12px;
+}
+/* guide steps */
+.gstep{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.gstep:last-child{border-bottom:none;padding-bottom:0}
+.gstep-n{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:rgba(200,245,58,.1);border:1px solid rgba(200,245,58,.3);
+  color:var(--accent);font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+.gstep-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.gstep-body{font-size:12px;color:rgba(255,255,255,.5);line-height:1.55}
+
+/* ── HUD (sobre câmera) ── */
+#hud{
+  position:fixed;inset:0;z-index:3;
+  pointer-events:none;
+  display:none;
+}
+#hud.active{display:block}
+
+/* topo */
+.hud-top{
+  position:absolute;top:0;left:0;right:0;
+  padding:max(env(safe-area-inset-top,10px),10px) 14px 10px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.75) 0%,transparent 100%);
+  display:flex;align-items:center;justify-content:space-between;
+  pointer-events:all;
+}
+.hud-logo{font-size:16px;font-weight:700;letter-spacing:-.5px}
+.hud-logo span{color:var(--accent)}
+.hud-badge{
+  padding:4px 12px;border-radius:100px;
+  font-size:11px;font-weight:700;border:1.5px solid;
+}
+.hbadge-cal{background:rgba(200,245,58,.15);color:var(--accent);border-color:rgba(200,245,58,.4)}
+.hbadge-serve{background:rgba(234,179,8,.15);color:var(--amber);border-color:rgba(234,179,8,.4)}
+.hbadge-rally{background:rgba(34,197,94,.15);color:var(--green);border-color:rgba(34,197,94,.4)}
+.hbadge-fault{background:rgba(239,68,68,.15);color:var(--red);border-color:rgba(239,68,68,.4)}
+
+/* placar mini */
+.score-mini{
+  display:none;
+  background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;overflow:hidden;backdrop-filter:blur(6px);
+}
+.score-mini.visible{display:flex}
+.sc-cell{padding:6px 12px;text-align:center}
+.sc-cell+.sc-cell{border-left:1px solid rgba(255,255,255,.1)}
+.sc-lbl{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px}
+.sc-val{font-size:19px;font-weight:700;line-height:1;margin-top:2px}
+
+/* bottom hud */
+.hud-bot{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:14px 14px max(env(safe-area-inset-bottom,14px),14px);
+  background:linear-gradient(to top,rgba(0,0,0,.88) 60%,transparent 100%);
+  pointer-events:all;
+  display:flex;flex-direction:column;gap:10px;
+}
+.info-bar{display:flex;align-items:center;gap:8px}
+.idot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#555}
+.idot.ok{background:var(--green)}
+.idot.warn{background:var(--amber);animation:bl .9s infinite}
+.idot.err{background:var(--red);animation:bl .4s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.itext{font-size:12px;color:rgba(255,255,255,.7);flex:1;line-height:1.4}
+.pips{display:flex;gap:5px}
+.pp{width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3)}
+.pp-ok{background:var(--green);border-color:var(--green)}
+.pp-used{background:var(--red);border-color:var(--red)}
+.pp-warn{background:var(--amber);border-color:var(--amber)}
+
+/* botões hud */
+.hud-btns{display:flex;flex-direction:column;gap:8px}
+.hbtn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hbtn{
+  padding:15px 8px;border-radius:12px;
+  font-size:15px;font-weight:700;border:1.5px solid;
+  min-height:52px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:opacity .15s;
+}
+.hbtn:active{opacity:.65;transform:scale(.96)}
+.hbtn-in{background:rgba(34,197,94,.15);color:var(--green);border-color:rgba(34,197,94,.4)}
+.hbtn-out{background:rgba(239,68,68,.15);color:var(--red);border-color:rgba(239,68,68,.4)}
+.hbtn-cal{background:rgba(200,245,58,.12);color:var(--accent);border-color:rgba(200,245,58,.3);width:100%}
+.hbtn-sm{
+  padding:10px 8px;border-radius:10px;font-size:12px;font-weight:600;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.65);min-height:40px;
+}
+
+/* OUT / IN banner */
+#banner{
+  position:fixed;inset:0;z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;transition:opacity .08s;
+}
+#banner.show{opacity:1}
+.banner-bg{position:absolute;inset:0}
+.banner-txt{
+  font-size:clamp(80px,24vw,120px);font-weight:700;
+  letter-spacing:6px;color:#fff;position:relative;z-index:1;
+  animation:pop .22s ease-out;
+}
+@keyframes pop{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:180px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.82);border:1px solid rgba(255,255,255,.12);
+  border-radius:100px;padding:8px 18px;
+  font-size:12px;color:rgba(255,255,255,.8);
+  white-space:nowrap;max-width:88vw;
+  overflow:hidden;text-overflow:ellipsis;
+  z-index:30;opacity:0;transition:opacity .25s;
+  pointer-events:none;backdrop-filter:blur(8px);
+}
+#toast.show{opacity:1}
+
+/* placar completo */
+#sc-score{
+  background:rgba(0,0,0,.92);gap:0;
+  justify-content:center;
+  padding:0;
+}
+.score-full-inner{
+  width:100%;max-width:360px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;overflow:hidden;margin:16px;
+}
+.sf-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);
+}
+.sf-title{font-size:14px;font-weight:600;color:rgba(255,255,255,.5)}
+.sf-close{
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.1);border:none;
+  color:#fff;font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+}
+.sf-players{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;padding:16px 18px;gap:8px;
+}
+.sfp{text-align:center}
+.sfp-name{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px}
+.sfp-pts{font-size:38px;font-weight:700;margin-top:4px}
+.sf-vs{font-size:12px;color:rgba(255,255,255,.3)}
+.sf-meta{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.sfm{padding:10px 14px;text-align:center;font-size:11px;color:rgba(255,255,255,.4)}
+.sfm+.sfm{border-left:1px solid rgba(255,255,255,.08)}
+.sf-acts{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);
+}
+.sf-act{
+  padding:12px;border-radius:10px;font-size:13px;font-weight:600;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.7);min-height:44px;
+}
+
+/* CAL PROGRESS BAR */
+#cal-bar{
+  position:fixed;top:0;left:0;right:0;height:3px;
+  background:rgba(255,255,255,.1);z-index:25;
+  display:none;
+}
+#cal-fill{height:100%;background:var(--accent);transition:width .3s;width:0%}
+
+/* ── iOS / SAFARI FIXES ── */
+/* Impede bounce scroll no iOS */
+body{-webkit-overflow-scrolling:auto}
+/* Guide com scroll suave iOS */
+#sc-guide{-webkit-overflow-scrolling:touch;overflow-y:scroll}
+/* Video no Safari precisa de atributos específicos */
+#video{-webkit-playsinline:true}
+/* Backdrop filter fallback */
+@supports not (backdrop-filter:blur(6px)){
+  .score-mini,.hud-top,.hud-bot{background:rgba(0,0,0,.85) !important}
+}
+
+/* ── TELA: BROWSER iOS ── */
+#sc-ios{
+  text-align:center;gap:16px;
+  background:rgba(0,5,15,.97);
+  padding:32px 24px;
+}
+.ios-icon{font-size:56px;line-height:1}
+.ios-title{font-size:22px;font-weight:700}
+.ios-body{font-size:14px;color:rgba(255,255,255,.5);max-width:280px;line-height:1.6}
+.ios-steps{
+  width:100%;max-width:320px;
+  display:flex;flex-direction:column;gap:8px;
+  text-align:left;
+}
+.ios-step{
+  padding:12px 14px;border-radius:12px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  font-size:13px;color:rgba(255,255,255,.7);
+  line-height:1.55;display:flex;gap:10px;align-items:flex-start;
+}
+.ios-sn{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;margin-top:1px;
+  background:rgba(200,245,58,.15);border:1px solid rgba(200,245,58,.3);
+  color:var(--accent);font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.safari-note{
+  width:100%;max-width:320px;
+  padding:10px 14px;border-radius:10px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);
+  font-size:12px;color:rgba(255,255,255,.65);line-height:1.55;
+  text-align:left;
+}
+</style>
+</head>
+<body>
+
+<!-- CÂMERA E CANVAS (sempre na base) -->
+<video id="video" autoplay playsinline muted webkit-playsinline x-webkit-airplay="deny"></video>
+<canvas id="canvas"></canvas>
+
+<!-- BARRA DE PROGRESSO CALIBRAÇÃO -->
+<div id="cal-bar"><div id="cal-fill"></div></div>
+
+<!-- ══ TELA: iOS — ABRIR NO SAFARI ══ -->
+<div class="screen off" id="sc-ios">
+  <div class="ios-icon">🧭</div>
+  <div class="ios-title">Abra no Safari</div>
+  <div class="ios-body">No iPhone e iPad, a câmera só funciona no <strong>Safari</strong>. O Chrome para iOS não permite acesso direto à câmera.</div>
+  <div class="ios-steps">
+    <div class="ios-step">
+      <div class="ios-sn">1</div>
+      <div>Toque no ícone de compartilhar <strong>⬆</strong> na barra inferior do Safari</div>
+    </div>
+    <div class="ios-step">
+      <div class="ios-sn">2</div>
+      <div>Copie este link e cole no <strong>Safari</strong> (não no Chrome)</div>
+    </div>
+    <div class="ios-step">
+      <div class="ios-sn">3</div>
+      <div>Quando o Safari pedir <strong>"tenniseye.netlify.app quer usar a câmera"</strong>, toque em <strong>Permitir</strong></div>
+    </div>
+    <div class="ios-step">
+      <div class="ios-sn">4</div>
+      <div>Se bloquear: <strong>Ajustes → Safari → Câmera → Perguntar</strong> ou Permitir</div>
+    </div>
+  </div>
+  <div class="safari-note">
+    💡 Dica: Para instalar como app, toque em ⬆ → <strong>"Adicionar à Tela de Início"</strong>. O ícone do TennisEye aparecerá na home.
+  </div>
+  <button class="big-btn btn-start" style="max-width:320px;width:100%" onclick="forceStartCam()">
+    Continuar mesmo assim
+  </button>
+  <button class="big-btn btn-guide" style="max-width:320px;width:100%;margin-top:4px" onclick="showScreen('sc-home')">
+    ← Voltar
+  </button>
+</div>
+
+<!-- HUD (sobre câmera, visível durante uso) -->
+<div id="hud">
+  <div class="hud-top">
+    <div class="hud-logo">Tennis<span>Eye</span></div>
+    <div id="hud-badge" class="hud-badge hbadge-cal">Calibrar</div>
+    <div class="score-mini" id="score-mini" onclick="showScreen('sc-score')">
+      <div class="sc-cell"><div class="sc-lbl">A</div><div class="sc-val" id="sc-a">0</div></div>
+      <div class="sc-cell"><div class="sc-lbl">B</div><div class="sc-val" id="sc-b">0</div></div>
+    </div>
+  </div>
+  <div class="hud-bot">
+    <div class="info-bar">
+      <div class="idot warn" id="idot"></div>
+      <div class="itext" id="itext">Posicione a câmera na rede e toque em Calibrar</div>
+      <div class="pips" id="pips" style="display:none">
+        <div class="pp pp-ok" id="pp1"></div>
+        <div class="pp" id="pp2"></div>
+      </div>
+    </div>
+    <div class="hud-btns">
+      <!-- estado: calibrar -->
+      <div id="ui-cal">
+        <button class="hbtn hbtn-cal" onclick="startCal()">🎯 Iniciar calibração</button>
+      </div>
+      <!-- estado: jogo -->
+      <div id="ui-play" style="display:none;flex-direction:column;gap:8px">
+        <div class="hbtn-row">
+          <button class="hbtn hbtn-in" onclick="markBall(true)">✓ Dentro</button>
+          <button class="hbtn hbtn-out" onclick="markBall(false)">✕ Fora</button>
+        </div>
+        <div class="hbtn-row">
+          <button class="hbtn hbtn-sm" onclick="reCal()">↺ Recalibrar</button>
+          <button class="hbtn hbtn-sm" onclick="showScreen('sc-score')">📊 Placar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER OUT/IN -->
+<div id="banner">
+  <div class="banner-bg" id="banner-bg"></div>
+  <div class="banner-txt" id="banner-txt">OUT</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ══ TELA: HOME ══ -->
+<div class="screen" id="sc-home">
+  <div class="logo">Tennis<span>Eye</span></div>
+  <p class="tagline">App de arbitragem para quadra — Samsung A55</p>
+  <div id="cam-status" class="alert alert-warn" style="max-width:320px">
+    Verificando câmera...
+  </div>
+  <button class="big-btn btn-start" id="btn-cam" onclick="startCamera()" disabled>
+    📷 Abrir câmera
+  </button>
+  <button class="big-btn btn-guide" onclick="showScreen('sc-guide')">
+    📋 Guia de instalação e adesivos
+  </button>
+  <div id="https-warn" style="display:none" class="alert alert-warn" style="max-width:320px">
+    ⚠ Para usar a câmera, abra este arquivo via Chrome com o arquivo na memória interna, ou hospede em HTTPS.
+  </div>
+</div>
+
+<!-- ══ TELA: PERMISSÃO / ERRO ══ -->
+<div class="screen off" id="sc-perm">
+  <div class="perm-icon" id="perm-icon">📷</div>
+  <div class="perm-title" id="perm-title">Acesso à câmera</div>
+  <div class="perm-body" id="perm-body">O TennisEye precisa da câmera traseira para detectar a bola.</div>
+  <div class="perm-steps" id="perm-steps"></div>
+  <button class="big-btn btn-start" id="btn-perm-retry" onclick="startCamera()">Tentar novamente</button>
+  <button class="big-btn btn-guide" onclick="showScreen('sc-home')">← Voltar</button>
+</div>
+
+<!-- ══ TELA: GUIA ══ -->
+<div class="screen off" id="sc-guide" style="justify-content:flex-start;align-items:stretch;padding:0;overflow-y:auto;touch-action:pan-y">
+  <div class="guide-top">
+    <button class="back-btn" onclick="showScreen('sc-home')">←</button>
+    <span style="font-size:17px;font-weight:700">Guia de instalação</span>
+  </div>
+  <div class="guide-scroll">
+
+    <div>
+      <div class="gs-title">🎯 Adesivos de calibração</div>
+      <div class="sticker-row">
+        <div class="stk stk-r">
+          <div class="stk-circle" style="background:#ef4444">🔴</div>
+          <div class="stk-size" style="color:#ef4444">10×10 cm</div>
+          <div class="stk-label">4 cantos da quadra</div>
+          <div class="stk-qty">× 4 unidades</div>
+        </div>
+        <div class="stk stk-y">
+          <div class="stk-circle" style="background:#eab308">🟡</div>
+          <div class="stk-size" style="color:#eab308">8×8 cm</div>
+          <div class="stk-label">Linha de saque — 3 próx. + 3 dist.</div>
+          <div class="stk-qty">× 6 unidades</div>
+        </div>
+        <div class="stk stk-b" style="grid-column:span 2">
+          <div class="stk-circle" style="background:#3b82f6">🔵</div>
+          <div class="stk-size" style="color:#3b82f6">8×8 cm</div>
+          <div class="stk-label">Centro da rede — base da fita central</div>
+          <div class="stk-qty">× 1 unidade — Total: 11 adesivos</div>
+        </div>
+      </div>
+      <div class="alert alert-warn" style="margin-top:10px">
+        ⚠ Use adesivos <strong>foscos</strong> (não brilhantes). Reflexo solar confunde a câmera. Vinil fosco ou papel cartão colorido funcionam bem.
+      </div>
+    </div>
+
+    <div>
+      <div class="gs-title">🗺 Posição dos adesivos</div>
+      <div class="court-wrap">
+        <svg viewBox="0 0 280 200" width="100%" style="display:block">
+          <rect width="280" height="200" fill="#152a18" rx="6"/>
+          <!-- quadra -->
+          <rect x="24" y="14" width="232" height="172" fill="#2d6a35" fill-opacity=".5" stroke="white" stroke-width="1.5"/>
+          <!-- linhas simples -->
+          <rect x="54" y="14" width="172" height="172" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1"/>
+          <line x1="54" y1="68" x2="226" y2="68" stroke="rgba(255,255,255,.4)" stroke-width="1"/>
+          <line x1="54" y1="132" x2="226" y2="132" stroke="rgba(255,255,255,.4)" stroke-width="1"/>
+          <line x1="140" y1="68" x2="140" y2="132" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+          <!-- rede -->
+          <line x1="24" y1="100" x2="256" y2="100" stroke="white" stroke-width="2.5"/>
+          <!-- câmera -->
+          <circle cx="140" cy="100" r="5" fill="#f97316"/>
+          <text x="140" y="114" text-anchor="middle" fill="#f97316" font-size="7" font-weight="bold">📷</text>
+          <!-- VERMELHOS cantos -->
+          <rect x="48" y="8" width="12" height="12" rx="2" fill="#ef4444" stroke="white" stroke-width=".5"/>
+          <text x="54" y="18" text-anchor="middle" fill="white" font-size="7" font-weight="bold">1</text>
+          <rect x="220" y="8" width="12" height="12" rx="2" fill="#ef4444" stroke="white" stroke-width=".5"/>
+          <text x="226" y="18" text-anchor="middle" fill="white" font-size="7" font-weight="bold">2</text>
+          <rect x="48" y="180" width="12" height="12" rx="2" fill="#ef4444" stroke="white" stroke-width=".5"/>
+          <text x="54" y="190" text-anchor="middle" fill="white" font-size="7" font-weight="bold">3</text>
+          <rect x="220" y="180" width="12" height="12" rx="2" fill="#ef4444" stroke="white" stroke-width=".5"/>
+          <text x="226" y="190" text-anchor="middle" fill="white" font-size="7" font-weight="bold">4</text>
+          <!-- AMARELOS linha de saque -->
+          <rect x="48" y="62" width="11" height="11" rx="2" fill="#eab308" stroke="white" stroke-width=".5"/>
+          <text x="54" y="71" text-anchor="middle" fill="black" font-size="7" font-weight="bold">5</text>
+          <rect x="135" y="62" width="11" height="11" rx="2" fill="#eab308" stroke="white" stroke-width=".5"/>
+          <text x="141" y="71" text-anchor="middle" fill="black" font-size="7" font-weight="bold">6</text>
+          <rect x="221" y="62" width="11" height="11" rx="2" fill="#eab308" stroke="white" stroke-width=".5"/>
+          <text x="227" y="71" text-anchor="middle" fill="black" font-size="7" font-weight="bold">7</text>
+          <rect x="48" y="126" width="11" height="11" rx="2" fill="#eab308" stroke="white" stroke-width=".5"/>
+          <text x="54" y="135" text-anchor="middle" fill="black" font-size="7" font-weight="bold">8</text>
+          <rect x="135" y="126" width="11" height="11" rx="2" fill="#eab308" stroke="white" stroke-width=".5"/>
+          <text x="141" y="135" text-anchor="middle" fill="black" font-size="7" font-weight="bold">9</text>
+          <rect x="221" y="126" width="11" height="11" rx="2" fill="#eab308" stroke="white" stroke-width=".5"/>
+          <text x="227" y="135" text-anchor="middle" fill="black" font-size="7" font-weight="bold">10</text>
+          <!-- AZUL rede -->
+          <rect x="135" y="94" width="11" height="11" rx="2" fill="#3b82f6" stroke="white" stroke-width=".5"/>
+          <text x="141" y="103" text-anchor="middle" fill="white" font-size="7" font-weight="bold">11</text>
+          <!-- legenda -->
+          <rect x="26" y="152" width="8" height="8" rx="1" fill="#ef4444"/>
+          <text x="38" y="160" fill="rgba(255,255,255,.6)" font-size="7">Cantos (10×10cm)</text>
+          <rect x="26" y="164" width="8" height="8" rx="1" fill="#eab308"/>
+          <text x="38" y="172" fill="rgba(255,255,255,.6)" font-size="7">Saque (8×8cm)</text>
+          <rect x="148" y="152" width="8" height="8" rx="1" fill="#3b82f6"/>
+          <text x="160" y="160" fill="rgba(255,255,255,.6)" font-size="7">Rede (8×8cm)</text>
+          <circle cx="152" cy="169" r="3.5" fill="#f97316"/>
+          <text x="160" y="172" fill="rgba(255,255,255,.6)" font-size="7">Câmera</text>
+        </svg>
+      </div>
+      <div class="alert alert-ok" style="margin-top:8px">
+        ✓ Calibre na sequência 1→11 como indicado no app. O número aparece em cada adesivo no diagrama.
+      </div>
+    </div>
+
+    <div>
+      <div class="gs-title">📱 Instalação por dispositivo</div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;margin-bottom:14px">
+        <button id="tab-android" onclick="setTab('android')"
+          style="flex:1;padding:10px;font-size:13px;font-weight:600;border:none;background:rgba(200,245,58,.12);color:var(--accent);border-right:1px solid rgba(255,255,255,.1)">
+          🤖 Android
+        </button>
+        <button id="tab-ios" onclick="setTab('ios')"
+          style="flex:1;padding:10px;font-size:13px;font-weight:600;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.5)">
+          🍎 iPhone / iPad
+        </button>
+      </div>
+
+      <!-- Android -->
+      <div id="panel-android" style="display:flex;flex-direction:column;gap:0">
+        <div class="gstep">
+          <div class="gstep-n">1</div>
+          <div><div class="gstep-title">Suporte na rede</div>
+          <div class="gstep-body">Braçadeira de microfone (clamp 25–35mm) na fita central. Custo: R$15–40 em lojas de música.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">2</div>
+          <div><div class="gstep-title">Altura: 0,75m do chão</div>
+          <div class="gstep-body">Meça da lente traseira principal até o chão. No A55, câmera principal (50MP) fica no canto superior esquerdo do verso.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">3</div>
+          <div><div class="gstep-title">Inclinação: 16° para baixo</div>
+          <div class="gstep-body">Use "Sensor Box for Android" ou o nível do A55. Linha do fundo deve aparecer no terço superior da tela.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">4</div>
+          <div><div class="gstep-title">Abrir no Chrome ou Samsung Internet</div>
+          <div class="gstep-body">Ambos funcionam no Android. Quando pedir permissão, toque <strong>Permitir</strong>.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">5</div>
+          <div><div class="gstep-title">Câmera não abre?</div>
+          <div class="gstep-body">Toque no ícone 🔒 na barra de endereço → Câmera → Permitir. Ou: Config. → Apps → Chrome → Permissões → Câmera.</div></div>
+        </div>
+        <div class="alert alert-warn" style="margin-top:10px">
+          ⚠ A55 suporta <strong>60fps em 1080p</strong> via browser. Para 120fps, necessário app nativo. 60fps é suficiente para validação.
+        </div>
+      </div>
+
+      <!-- iOS -->
+      <div id="panel-ios" style="display:none;flex-direction:column;gap:0">
+        <div class="alert alert-err" style="margin-bottom:12px">
+          🚫 <strong>Não use o Chrome no iPhone.</strong> No iOS, o Chrome não acessa câmera via web. Use o <strong>Safari</strong>.
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">1</div>
+          <div><div class="gstep-title">Abrir no Safari</div>
+          <div class="gstep-body">Cole o link do app no Safari. Quando aparecer "quer usar a câmera", toque <strong>Permitir</strong>.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">2</div>
+          <div><div class="gstep-title">Câmera bloqueada no Safari?</div>
+          <div class="gstep-body">Ajustes do iPhone → Safari → Câmera → <strong>Perguntar</strong> ou <strong>Permitir</strong>. Recarregue a página.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">3</div>
+          <div><div class="gstep-title">Instalar como app (PWA)</div>
+          <div class="gstep-body">No Safari, toque em ⬆ → <strong>Adicionar à Tela de Início</strong>. O TennisEye aparece como app na home.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">4</div>
+          <div><div class="gstep-title">Suporte e posição da câmera</div>
+          <div class="gstep-body">Mesmas instruções do Android: 0,75m de altura, 16° de inclinação, braçadeira no centro da rede.</div></div>
+        </div>
+        <div class="alert alert-warn" style="margin-top:10px">
+          ⚠ Safari iOS limita câmera a <strong>30fps</strong> via web. Suficiente para calibração e validação. Para 60fps, necessário app nativo.
+        </div>
+        <div class="alert alert-ok" style="margin-top:8px">
+          ✓ iPhone 11 ou mais recente suporta câmera grande angular — ideal para cobrir os 10,97m de largura da quadra.
+        </div>
+      </div>
+    </div>
+
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- ══ TELA: PLACAR COMPLETO ══ -->
+<div class="screen off" id="sc-score">
+  <div class="score-full-inner">
+    <div class="sf-head">
+      <div class="sf-title">Placar completo</div>
+      <button class="sf-close" onclick="hideScore()">×</button>
+    </div>
+    <div class="sf-players">
+      <div class="sfp"><div class="sfp-name">Jogador A</div><div class="sfp-pts" id="sf-a">0</div></div>
+      <div class="sf-vs">vs</div>
+      <div class="sfp"><div class="sfp-name">Jogador B</div><div class="sfp-pts" id="sf-b">0</div></div>
+    </div>
+    <div class="sf-meta">
+      <div class="sfm" id="sfm-a">Games: 0 | Sets: 0</div>
+      <div class="sfm" id="sfm-b">Games: 0 | Sets: 0</div>
+    </div>
+    <div class="sf-acts">
+      <button class="sf-act" onclick="resetGame()">↺ Reiniciar</button>
+      <button class="sf-act" onclick="hideScore()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════
+   DETECÇÃO DE PLATAFORMA
+══════════════════════════════ */
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+const IS_IOS_CHROME = IS_IOS && /CriOS/.test(navigator.userAgent);
+const IS_IOS_FIREFOX = IS_IOS && /FxiOS/.test(navigator.userAgent);
+const NEEDS_SAFARI_WARNING = IS_IOS && !IS_SAFARI; // iOS mas não Safari
+
+/* ══════════════════════════════
+   UTILITÁRIOS
+══════════════════════════════ */
+let toastTmr;
+function toast(msg,dur=2400){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('off',s.id!==id));
+}
+function hideScore(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
+}
+
+// Tab guide
+function setTab(t){
+  const isA=t==='android';
+  document.getElementById('panel-android').style.display=isA?'flex':'none';
+  document.getElementById('panel-ios').style.display=isA?'none':'flex';
+  const ta=document.getElementById('tab-android');
+  const ti=document.getElementById('tab-ios');
+  if(ta&&ti){
+    ta.style.background=isA?'rgba(200,245,58,.12)':'rgba(255,255,255,.04)';
+    ta.style.color=isA?'var(--accent)':'rgba(255,255,255,.5)';
+    ti.style.background=isA?'rgba(255,255,255,.04)':'rgba(200,245,58,.12)';
+    ti.style.color=isA?'rgba(255,255,255,.5)':'var(--accent)';
+  }
+}
+
+/* ══════════════════════════════
+   SPEECH — iOS FIX
+══════════════════════════════ */
+let voicesLoaded=false;
+let pendingSpeak=null;
+
+function initSpeech(){
+  if(!window.speechSynthesis) return;
+  const load=()=>{
+    const v=speechSynthesis.getVoices();
+    if(v.length>0){ voicesLoaded=true; if(pendingSpeak){speak(pendingSpeak);pendingSpeak=null;} }
+  };
+  speechSynthesis.onvoiceschanged=load;
+  load();
+}
+
+function speak(txt){
+  if(!window.speechSynthesis) return;
+  // iOS Safari: speechSynthesis só funciona após interação do usuário
+  // e pode ficar parado se o app ficou em background
+  if(IS_IOS){
+    try{
+      speechSynthesis.cancel();
+      // iOS precisa de um resumo antes de falar
+      const resume=new SpeechSynthesisUtterance('');
+      speechSynthesis.speak(resume);
+    }catch(e){}
+  }
+  if(!voicesLoaded){pendingSpeak=txt;return;}
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    u.lang='en-US';u.volume=1;u.rate=IS_IOS?.9:.85;u.pitch=1;
+    const vs=speechSynthesis.getVoices();
+    const v=vs.find(x=>x.lang==='en-US')||vs.find(x=>x.lang.startsWith('en'));
+    if(v) u.voice=v;
+    // iOS: delay maior necessário
+    setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){}}, IS_IOS?150:60);
+  }catch(e){ console.warn('Speech error:',e); }
+}
+
+/* ══════════════════════════════
+   CÂMERA
+══════════════════════════════ */
+const video=document.getElementById('video');
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+
+function resizeCanvas(){
+  // Usa dimensões reais do vídeo quando disponíveis
+  const w=video.videoWidth, h=video.videoHeight;
+  if(w&&h){ canvas.width=w; canvas.height=h; }
+  else{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+}
+
+async function startCamera(){
+  const statusEl=document.getElementById('cam-status');
+  statusEl.textContent='Abrindo câmera...';
+  statusEl.className='alert alert-warn';
+
+  // iOS Chrome/Firefox — câmera não funciona, mostrar aviso
+  if(NEEDS_SAFARI_WARNING){
+    showScreen('sc-ios');
+    return;
+  }
+
+  // iOS Safari — constraints específicas (sem exact facingMode que pode falhar)
+  // Android Chrome — tenta do melhor para o mais simples
+  let constraintsList;
+  if(IS_IOS){
+    constraintsList=[
+      {video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}},
+      {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},
+      {video:{facingMode:'environment'}},
+      {video:true},
+    ];
+  } else {
+    constraintsList=[
+      {video:{facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60}}},
+      {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}},
+      {video:{facingMode:'environment'}},
+      {video:true},
+    ];
+  }
+
+  let stream=null;
+  let lastErr=null;
+  for(const c of constraintsList){
+    try{ stream=await navigator.mediaDevices.getUserMedia(c); break; }
+    catch(e){ lastErr=e; console.warn('Constraint falhou:',e.name,e.message); }
+  }
+
+  if(!stream){
+    showPermError(lastErr);
+    return;
+  }
+
+  video.srcObject=stream;
+
+  // iOS Safari: play() pode precisar de interação do usuário
+  // usar evento ao invés de promise direto
+  video.onloadedmetadata=async()=>{
+    try{
+      await video.play();
+    }catch(e){
+      // iOS: se falhar, tenta via interação
+      console.warn('play() falhou, aguardando interação:',e);
+      document.addEventListener('touchstart',()=>video.play(),{once:true});
+    }
+    resizeCanvas();
+    window.addEventListener('resize',()=>{ resizeCanvas(); if(calibrated) drawCalibratedCanvas(); });
+    onCameraReady();
+  };
+  video.onerror=(e)=>{ console.error('video error:',e); showPermError(null); };
+}
+
+function onCameraReady(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
+  document.getElementById('hud').classList.add('active');
+  document.getElementById('cal-bar').style.display='block';
+  drawIdleCanvas();
+  const fps=IS_IOS?'30fps':'60fps';
+  toast(`📷 Câmera ativa (${fps}) — toque em Iniciar calibração`);
+}
+
+function forceStartCam(){
+  // Botão "continuar mesmo assim" na tela iOS
+  // Tenta abrir câmera mesmo no Chrome iOS (pode funcionar em versões novas)
+  document.getElementById('sc-ios').classList.add('off');
+  startCameraForce();
+}
+
+async function startCameraForce(){
+  let stream=null;
+  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); }
+  catch(e){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true}); }catch(e2){ showPermError(e2); return; } }
+  video.srcObject=stream;
+  video.onloadedmetadata=async()=>{ try{await video.play();}catch(e){} resizeCanvas(); onCameraReady(); };
+}
+
+function showPermError(err){
+  const icon=document.getElementById('perm-icon');
+  const title=document.getElementById('perm-title');
+  const body=document.getElementById('perm-body');
+  const steps=document.getElementById('perm-steps');
+  icon.textContent='🚫';
+  title.textContent='Câmera bloqueada';
+
+  if(IS_IOS){
+    body.textContent='No iPhone/iPad, a câmera só funciona no Safari.';
+    steps.innerHTML=`
+      <div class="perm-step">1. Feche esta aba e abra o link no <strong>Safari</strong></div>
+      <div class="perm-step">2. Ajustes → Safari → Câmera → <strong>Perguntar</strong> ou Permitir</div>
+      <div class="perm-step">3. Recarregue a página no Safari e toque em Permitir</div>`;
+  } else {
+    const msg=err?err.message:'Permissão negada';
+    body.textContent=`Erro: ${msg}`;
+    steps.innerHTML=`
+      <div class="perm-step">1. Toque no ícone 🔒 na barra de endereço do Chrome</div>
+      <div class="perm-step">2. Câmera → <strong>Permitir</strong></div>
+      <div class="perm-step">3. Ou: Config. Android → Apps → Chrome → Permissões → Câmera → Permitir</div>
+      <div class="perm-step">4. Recarregue esta página e tente novamente</div>`;
+  }
+  showScreen('sc-perm');
+}
+
+/* ══════════════════════════════
+   CALIBRAÇÃO
+══════════════════════════════ */
+const C={L:23.77,Ws:8.23,Wd:10.97,svc:6.40};
+const hl=C.L/2,hwd=C.Wd/2,hws=C.Ws/2;
+
+const SEQ=[
+  {key:'tl', label:'Canto SUP. ESQUERDO',  color:'#ef4444', hint:'🔴 Canto sup. esquerdo — VERMELHO', mx:hwd-hws, my:0},
+  {key:'tr', label:'Canto SUP. DIREITO',   color:'#ef4444', hint:'🔴 Canto sup. direito — VERMELHO',  mx:hwd+hws, my:0},
+  {key:'bl', label:'Canto INF. ESQUERDO',  color:'#ef4444', hint:'🔴 Canto inf. esquerdo — VERMELHO', mx:hwd-hws, my:C.L},
+  {key:'br', label:'Canto INF. DIREITO',   color:'#ef4444', hint:'🔴 Canto inf. direito — VERMELHO',  mx:hwd+hws, my:C.L},
+  {key:'sln',label:'Saque ESQ. FRENTE',    color:'#eab308', hint:'🟡 Saque esq. próx. à rede — AMARELO', mx:hwd-hws, my:hl-C.svc},
+  {key:'scn',label:'Saque CENTRO FRENTE',  color:'#eab308', hint:'🟡 Saque centro próx. — AMARELO',  mx:hwd,     my:hl-C.svc},
+  {key:'srn',label:'Saque DIR. FRENTE',    color:'#eab308', hint:'🟡 Saque dir. próx. — AMARELO',    mx:hwd+hws, my:hl-C.svc},
+  {key:'slf',label:'Saque ESQ. FUNDO',     color:'#eab308', hint:'🟡 Saque esq. fundo — AMARELO',    mx:hwd-hws, my:hl+C.svc},
+  {key:'scf',label:'Saque CENTRO FUNDO',   color:'#eab308', hint:'🟡 Saque centro fundo — AMARELO',  mx:hwd,     my:hl+C.svc},
+  {key:'srf',label:'Saque DIR. FUNDO',     color:'#eab308', hint:'🟡 Saque dir. fundo — AMARELO',    mx:hwd+hws, my:hl+C.svc},
+  {key:'net',label:'CENTRO da REDE',       color:'#3b82f6', hint:'🔵 Centro da rede — AZUL',         mx:hwd,     my:hl},
+];
+
+let calStep=0, calPts=[], calibrated=false, calAnimId=null;
+
+function drawIdleCanvas(){
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(200,245,58,0.07)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=W/6){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=H/8){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.strokeStyle='rgba(200,245,58,0.3)';ctx.lineWidth=1.5;ctx.setLineDash([6,6]);
+  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(200,245,58,0.65)';ctx.font='bold 13px system-ui';ctx.textAlign='center';
+  ctx.fillText('↑ QUADRA ↑',W/2,H/2-12);
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='11px system-ui';
+  ctx.fillText('Aponte para a quadra e calibre',W/2,H/2+12);
+}
+
+function drawCalCanvas(){
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  // Pontos confirmados
+  calPts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.px,p.py,20,0,Math.PI*2);
+    ctx.fillStyle=SEQ[i].color+'44';ctx.fill();
+    ctx.beginPath();ctx.arc(p.px,p.py,12,0,Math.PI*2);
+    ctx.fillStyle=SEQ[i].color;ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#000';ctx.font='bold 10px system-ui';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('✓',p.px,p.py);ctx.textBaseline='alphabetic';
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='10px system-ui';
+    ctx.fillText(i+1,p.px,p.py+26);
+  });
+  // Passo atual
+  if(calStep<SEQ.length){
+    const cur=SEQ[calStep];
+    const bw=Math.min(W-32,340),bx=(W-bw)/2,by=H*0.1;
+    ctx.fillStyle='rgba(0,0,0,0.8)';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(bx,by,bw,58,12);
+    else ctx.rect(bx,by,bw,58);
+    ctx.fill();
+    ctx.strokeStyle=cur.color+'bb';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='11px system-ui';ctx.textAlign='center';
+    ctx.fillText(`Passo ${calStep+1} de 11`,W/2,by+18);
+    ctx.fillStyle=cur.color;ctx.font='bold 13px system-ui';
+    ctx.fillText(cur.hint,W/2,by+40);
+    // Alvo pulsante
+    const tx=W/2,ty=H*0.58;
+    const pulse=1+Math.sin(Date.now()/550)*0.14;
+    ctx.beginPath();ctx.arc(tx,ty,34*pulse,0,Math.PI*2);
+    ctx.strokeStyle=cur.color+'44';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.arc(tx,ty,22,0,Math.PI*2);
+    ctx.strokeStyle=cur.color+'88';ctx.lineWidth=1.5;
+    ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(tx,ty,9,0,Math.PI*2);
+    ctx.fillStyle=cur.color;ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('👆',tx,ty);ctx.textBaseline='alphabetic';
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText('Toque no adesivo correspondente na imagem',W/2,H*0.76);
+  }
+}
+
+function drawCalibratedCanvas(){
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const pts={};calPts.forEach(p=>{pts[p.key]={x:p.px,y:p.py};});
+  ctx.strokeStyle='rgba(200,245,58,0.4)';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);
+  [['tl','tr'],['bl','br'],['tl','bl'],['tr','br']].forEach(([a,b])=>{
+    if(pts[a]&&pts[b]){ctx.beginPath();ctx.moveTo(pts[a].x,pts[a].y);ctx.lineTo(pts[b].x,pts[b].y);ctx.stroke();}
+  });
+  ctx.strokeStyle='rgba(234,179,8,0.4)';
+  if(pts.sln&&pts.srn){ctx.beginPath();ctx.moveTo(pts.sln.x,pts.sln.y);ctx.lineTo(pts.srn.x,pts.srn.y);ctx.stroke();}
+  if(pts.slf&&pts.srf){ctx.beginPath();ctx.moveTo(pts.slf.x,pts.slf.y);ctx.lineTo(pts.srf.x,pts.srf.y);ctx.stroke();}
+  ctx.setLineDash([]);
+  calPts.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.px,p.py,5,0,Math.PI*2);ctx.fillStyle=SEQ[i].color;ctx.fill();});
+}
+
+function startCal(){
+  calStep=0;calPts=[];calibrated=false;
+  document.getElementById('ui-cal').style.display='';
+  document.getElementById('ui-play').style.display='none';
+  document.getElementById('pips').style.display='none';
+  document.getElementById('score-mini').classList.remove('visible');
+  updateBadge('Calibrar','hbadge-cal');
+  setInfo('warn',`Toque no adesivo 1/11 — ${SEQ[0].hint}`);
+  canvas.classList.add('cal-active');
+  // iOS: usar touchend em vez de touchstart para evitar scroll
+  if(IS_IOS){
+    canvas.addEventListener('touchend',onCalTapIOS,{passive:false});
+  } else {
+    canvas.addEventListener('touchstart',onCalTap,{passive:false});
+  }
+  canvas.addEventListener('click',onCalClick);
+  updateCalBar();
+  if(calAnimId) cancelAnimationFrame(calAnimId);
+  calAnimId=requestAnimationFrame(calLoop);
+  toast('Toque em cada adesivo na ordem indicada');
+}
+
+function calLoop(){calDrawCalCanvas();calAnimId=requestAnimationFrame(calLoop);}
+// alias para evitar conflito de nome
+function calDrawCalCanvas(){drawCalCanvas();}
+
+function onCalTap(e){
+  e.preventDefault();
+  const t=e.touches[0];
+  tapXY(t.clientX,t.clientY);
+}
+function onCalTapIOS(e){
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  tapXY(t.clientX,t.clientY);
+}
+function onCalClick(e){tapXY(e.clientX,e.clientY);}
+
+function tapXY(cx2,cy2){
+  if(calStep>=SEQ.length) return;
+  const r=canvas.getBoundingClientRect();
+  const sx=canvas.width/r.width,sy=canvas.height/r.height;
+  const x=(cx2-r.left)*sx,y=(cy2-r.top)*sy;
+  const cur=SEQ[calStep];
+  calPts.push({key:cur.key,px:x,py:y,mx:cur.mx,my:cur.my});
+  calStep++;
+  speak('Ok');
+  toast(`✓ ${cur.label} — ${calStep}/11`);
+  updateCalBar();
+  if(calStep>=SEQ.length){ finishCal(); }
+  else{
+    setInfo('warn',`Toque no adesivo ${calStep+1}/11 — ${SEQ[calStep].hint}`);
+    updateBadge(`Cal ${calStep+1}/11`,'hbadge-cal');
+  }
+}
+
+function updateCalBar(){
+  document.getElementById('cal-fill').style.width=((calStep/SEQ.length)*100)+'%';
+}
+
+function finishCal(){
+  cancelAnimationFrame(calAnimId);
+  canvas.classList.remove('cal-active');
+  canvas.removeEventListener('touchstart',onCalTap);
+  canvas.removeEventListener('touchend',onCalTapIOS);
+  canvas.removeEventListener('click',onCalClick);
+  calibrated=true;
+  drawCalibratedCanvas();
+  document.getElementById('ui-cal').style.display='none';
+  document.getElementById('ui-play').style.display='flex';
+  document.getElementById('pips').style.display='flex';
+  document.getElementById('score-mini').classList.add('visible');
+  document.getElementById('cal-bar').style.display='none';
+  updateBadge('1º saque','hbadge-serve');
+  setInfo('ok','Sistema calibrado! Use os botões para marcar cada jogada.');
+  updatePips();
+  speak('Calibração completa. Pode sacar!');
+  toast('🎯 Calibrado! Sistema pronto.');
+}
+
+function reCal(){
+  if(calAnimId) cancelAnimationFrame(calAnimId);
+  calStep=0;calPts=[];calibrated=false;
+  document.getElementById('cal-bar').style.display='block';
+  document.getElementById('ui-play').style.display='none';
+  document.getElementById('ui-cal').style.display='';
+  document.getElementById('pips').style.display='none';
+  document.getElementById('score-mini').classList.remove('visible');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawIdleCanvas();
+  updateBadge('Calibrar','hbadge-cal');
+  setInfo('warn','Toque em Iniciar calibração');
+  toast('Calibração reiniciada');
+}
+
+/* ══════════════════════════════
+   JOGO
+══════════════════════════════ */
+let gs={phase:'serve',serveAttempt:1,server:'A',pts:{A:0,B:0},games:{A:0,B:0},sets:{A:0,B:0},deuce:false};
+
+function markBall(inside){
+  // iOS: speechSynthesis precisa ser chamado em contexto de toque
+  const isServe=gs.phase==='serve'||gs.phase==='fault';
+  if(isServe){
+    if(inside){
+      showBanner('IN','rgba(34,197,94,0.15)');speak('In');
+      gs.phase='rally';gs.serveAttempt=1;
+      updateBadge('Rally','hbadge-rally');
+      setInfo('ok','Saque dentro! Rally em andamento.');
+      updatePips();toast('✓ Saque dentro — jogo inicia');
+    }else{
+      showBanner('OUT','rgba(239,68,68,0.18)');speak('Out');
+      if(gs.serveAttempt===1){
+        gs.phase='fault';gs.serveAttempt=2;
+        updateBadge('2º saque','hbadge-fault');
+        setInfo('warn','Falta! 2º saque disponível.');
+        updatePips();toast('Falta — 2º saque');
+      }else{
+        speak('Double fault');
+        toast('⚡ Dupla falta — ponto adversário');
+        awardPt(gs.server==='A'?'B':'A');resetServe();
+      }
+    }
+  }else{
+    if(inside){
+      showBanner('IN','rgba(34,197,94,0.15)');speak('In');
+      toast('✓ Dentro — ponto!');awardPt(gs.server);resetServe();
+    }else{
+      showBanner('OUT','rgba(239,68,68,0.18)');speak('Out');
+      toast('⚡ OUT! Ponto adversário');awardPt(gs.server==='A'?'B':'A');resetServe();
+    }
+  }
+  updateScoreDisplay();
+}
+
+function resetServe(){
+  gs.phase='serve';gs.serveAttempt=1;
+  updateBadge('1º saque','hbadge-serve');
+  setInfo('ok','Próximo ponto — aguardando saque.');updatePips();
+}
+
+function awardPt(w){
+  const l=w==='A'?'B':'A';
+  if(gs.deuce){
+    if(gs.pts[w]>gs.pts[l]){winGame(w);return;}
+    gs.pts[w]++;
+  }else if(gs.pts[w]===3&&gs.pts[l]===3){
+    gs.deuce=true;gs.pts[w]++;toast('Deuce!');
+  }else if(gs.pts[w]===3){winGame(w);return;}
+  else gs.pts[w]++;
+  updateScoreDisplay();
+}
+
+function winGame(w){
+  gs.games[w]++;gs.pts={A:0,B:0};gs.deuce=false;
+  const dif=gs.games[w]-gs.games[w==='A'?'B':'A'];
+  if(gs.games[w]>=6&&dif>=2){gs.sets[w]++;gs.games={A:0,B:0};toast(`🏆 SET para jogador ${w}!`);}
+  else toast(`Game para jogador ${w}! (${gs.games.A}-${gs.games.B})`);
+  gs.server=gs.server==='A'?'B':'A';
+}
+
+function resetGame(){
+  gs={phase:'serve',serveAttempt:1,server:'A',pts:{A:0,B:0},games:{A:0,B:0},sets:{A:0,B:0},deuce:false};
+  updateBadge('1º saque','hbadge-serve');updateScoreDisplay();updatePips();
+  toast('Jogo reiniciado');hideScore();
+}
+
+function updateScoreDisplay(){
+  const pts=['0','15','30','40'];const{pts:p,deuce:d}=gs;
+  let dA,dB;
+  if(d){dA=p.A>p.B?'ADV':'40';dB=p.B>p.A?'ADV':'40';}
+  else{dA=pts[p.A]||'0';dB=pts[p.B]||'0';}
+  ['sc-a','sf-a'].forEach(id=>document.getElementById(id).textContent=dA);
+  ['sc-b','sf-b'].forEach(id=>document.getElementById(id).textContent=dB);
+  document.getElementById('sfm-a').textContent=`Games: ${gs.games.A} | Sets: ${gs.sets.A}`;
+  document.getElementById('sfm-b').textContent=`Games: ${gs.games.B} | Sets: ${gs.sets.B}`;
+}
+
+function updatePips(){
+  const p1=document.getElementById('pp1'),p2=document.getElementById('pp2');
+  if(gs.phase==='serve'&&gs.serveAttempt===1){p1.className='pp pp-ok';p2.className='pp';}
+  else if(gs.phase==='fault'){p1.className='pp pp-used';p2.className='pp pp-warn';}
+  else{p1.className='pp pp-ok';p2.className='pp pp-ok';}
+}
+
+function showBanner(txt,bg){
+  const b=document.getElementById('banner'),t=document.getElementById('banner-txt'),bg2=document.getElementById('banner-bg');
+  t.textContent=txt;
+  t.style.textShadow=txt==='OUT'?'0 0 60px #ef4444,0 4px 24px rgba(0,0,0,.6)':'0 0 60px #22c55e,0 4px 24px rgba(0,0,0,.6)';
+  bg2.style.background=bg;b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'),1400);
+}
+
+/* ══════════════════════════════
+   HUD HELPERS
+══════════════════════════════ */
+function setInfo(dot,txt){
+  document.getElementById('idot').className='idot '+dot;
+  document.getElementById('itext').textContent=txt;
+}
+function updateBadge(txt,cls){
+  const b=document.getElementById('hud-badge');b.textContent=txt;b.className='hud-badge '+cls;
+}
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+window.addEventListener('load',()=>{
+  initSpeech();
+
+  const statusEl=document.getElementById('cam-status');
+  const btnCam=document.getElementById('btn-cam');
+
+  // Detecta plataforma e mostra mensagem correta
+  if(IS_IOS && !IS_SAFARI){
+    // iOS mas não Safari — câmera não vai funcionar
+    statusEl.innerHTML='🚫 <strong>iPhone detectado.</strong> Use o <strong>Safari</strong> para acessar a câmera. O Chrome no iOS não permite acesso à câmera via web.';
+    statusEl.className='alert alert-err';
+    btnCam.textContent='Abrir no Safari (instruções)';
+    btnCam.onclick=()=>showScreen('sc-ios');
+    btnCam.disabled=false;
+    // Aba iOS no guia
+    if(IS_IOS) setTab('ios');
+  } else if(IS_IOS && IS_SAFARI){
+    statusEl.innerHTML='✓ Safari detectado — câmera disponível. Toque em Abrir câmera.';
+    statusEl.className='alert alert-ok';
+    btnCam.disabled=false;
+    btnCam.onclick=startCamera;
+    setTab('ios');
+  } else if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    statusEl.textContent='⚠ Câmera não detectada. Tente no Chrome.';
+    statusEl.className='alert alert-warn';
+    btnCam.disabled=false;
+    btnCam.onclick=startCamera;
+  } else {
+    statusEl.textContent='✓ Câmera disponível — toque em Abrir câmera';
+    statusEl.className='alert alert-ok';
+    btnCam.disabled=false;
+    btnCam.onclick=startCamera;
+  }
+});
+</script>
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+function showScreen(id){
+  // Tela sc-home e sc-guide ficam sobre tudo
+  // HUD fica separado — não é .screen
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('off',s.id!==id));
+}
+function hideScore(){
+  showScreen('sc-home'); // volta pra tela nula, HUD continua visível
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
+}
+
+function speak(txt){
+  try{
+    if(!window.speechSynthesis)return;
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    u.lang='en-US';u.volume=1;u.rate=.85;
+    const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith('en'));
+    if(v)u.voice=v;
+    setTimeout(()=>speechSynthesis.speak(u),60);
+  }catch(e){}
+}
+
+/* ══════════════════════════════
+   CÂMERA
+══════════════════════════════ */
+const video=document.getElementById('video');
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+
+function resizeCanvas(){
+  canvas.width=video.videoWidth||window.innerWidth;
+  canvas.height=video.videoHeight||window.innerHeight;
+}
+
+async function startCamera(){
+  const statusEl=document.getElementById('cam-status');
+  statusEl.textContent='Abrindo câmera...';
+  statusEl.className='alert alert-warn';
+
+  // Tenta câmera traseira com resolução ideal
+  const constraints=[
+    {video:{facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60}}},
+    {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}},
+    {video:{facingMode:'environment'}},
+    {video:true}, // fallback absoluto
+  ];
+
+  let stream=null;
+  for(const c of constraints){
+    try{
+      stream=await navigator.mediaDevices.getUserMedia(c);
+      break;
+    }catch(e){
+      console.warn('Constraint falhou:',e.name,c);
+    }
+  }
+
+  if(!stream){
+    showPermError('Câmera bloqueada ou não disponível');
+    return;
+  }
+
+  video.srcObject=stream;
+  video.onloadedmetadata=()=>{
+    video.play();
+    resizeCanvas();
+    window.addEventListener('resize',resizeCanvas);
+    // Câmera OK — mostrar HUD
+    document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
+    document.getElementById('hud').classList.add('active');
+    document.getElementById('cal-bar').style.display='block';
+    drawIdleCanvas();
+    toast('📷 Câmera ativa! Toque em Iniciar calibração');
+  };
+  video.onerror=()=>showPermError('Erro ao iniciar câmera');
+}
+
+function showPermError(msg){
+  const icon=document.getElementById('perm-icon');
+  const title=document.getElementById('perm-title');
+  const body=document.getElementById('perm-body');
+  const steps=document.getElementById('perm-steps');
+  icon.textContent='🚫';
+  title.textContent='Câmera bloqueada';
+  body.textContent=msg;
+  steps.innerHTML=`
+    <div class="perm-step">1. Na barra do Chrome, toque no ícone 🔒 ou 📷</div>
+    <div class="perm-step">2. Selecione "Permissões" → "Câmera" → "Permitir"</div>
+    <div class="perm-step">3. Ou: Config. Android → Apps → Chrome → Permissões → Câmera → Permitir</div>
+    <div class="perm-step">4. Recarregue esta página e tente novamente</div>
+  `;
+  showScreen('sc-perm');
+}
+
+/* ══════════════════════════════
+   CALIBRAÇÃO
+══════════════════════════════ */
+const C={L:23.77,Ws:8.23,Wd:10.97,svc:6.40};
+const hl=C.L/2,hwd=C.Wd/2,hws=C.Ws/2;
+
+const SEQ=[
+  {key:'tl', label:'Canto SUP. ESQUERDO',    color:'#ef4444', hint:'🔴 Canto superior esquerdo — adesivo VERMELHO', mx:hwd-hws, my:0},
+  {key:'tr', label:'Canto SUP. DIREITO',     color:'#ef4444', hint:'🔴 Canto superior direito — adesivo VERMELHO',  mx:hwd+hws, my:0},
+  {key:'bl', label:'Canto INF. ESQUERDO',   color:'#ef4444', hint:'🔴 Canto inferior esquerdo — adesivo VERMELHO', mx:hwd-hws, my:C.L},
+  {key:'br', label:'Canto INF. DIREITO',    color:'#ef4444', hint:'🔴 Canto inferior direito — adesivo VERMELHO',  mx:hwd+hws, my:C.L},
+  {key:'sln',label:'Saque ESQ. FRENTE',     color:'#eab308', hint:'🟡 Saque esq. próximo à rede — AMARELO',        mx:hwd-hws, my:hl-C.svc},
+  {key:'scn',label:'Saque CENTRO FRENTE',   color:'#eab308', hint:'🟡 Saque centro próximo à rede — AMARELO',      mx:hwd,     my:hl-C.svc},
+  {key:'srn',label:'Saque DIR. FRENTE',     color:'#eab308', hint:'🟡 Saque dir. próximo à rede — AMARELO',        mx:hwd+hws, my:hl-C.svc},
+  {key:'slf',label:'Saque ESQ. FUNDO',      color:'#eab308', hint:'🟡 Saque esq. no fundo — AMARELO',              mx:hwd-hws, my:hl+C.svc},
+  {key:'scf',label:'Saque CENTRO FUNDO',    color:'#eab308', hint:'🟡 Saque centro no fundo — AMARELO',            mx:hwd,     my:hl+C.svc},
+  {key:'srf',label:'Saque DIR. FUNDO',      color:'#eab308', hint:'🟡 Saque dir. no fundo — AMARELO',              mx:hwd+hws, my:hl+C.svc},
+  {key:'net',label:'CENTRO da REDE',        color:'#3b82f6', hint:'🔵 Centro da rede — adesivo AZUL',              mx:hwd,     my:hl},
+];
+
+let calStep=0;
+let calPts=[]; // {key,px,py,mx,my}
+let calibrated=false;
+
+function drawIdleCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Grid sutil
+  ctx.strokeStyle='rgba(200,245,58,0.08)';
+  ctx.lineWidth=1;
+  const W=canvas.width,H=canvas.height;
+  for(let x=0;x<W;x+=W/6){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=H/8){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // Centro
+  ctx.strokeStyle='rgba(200,245,58,0.3)';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([6,6]);
+  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(200,245,58,0.6)';
+  ctx.font='bold 13px system-ui';
+  ctx.textAlign='center';
+  ctx.fillText('↑ QUADRA ↑',W/2,H/2-12);
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  ctx.font='11px system-ui';
+  ctx.fillText('Aponte para a quadra e calibre',W/2,H/2+12);
+}
+
+function drawCalCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const W=canvas.width,H=canvas.height;
+
+  // Pontos já confirmados
+  calPts.forEach((p,i)=>{
+    // Círculo cheio
+    ctx.beginPath();ctx.arc(p.px,p.py,18,0,Math.PI*2);
+    ctx.fillStyle=SEQ[i].color+'55';ctx.fill();
+    ctx.beginPath();ctx.arc(p.px,p.py,12,0,Math.PI*2);
+    ctx.fillStyle=SEQ[i].color;ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#000';ctx.font='bold 10px system-ui';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('✓',p.px,p.py);
+    ctx.textBaseline='alphabetic';
+    // Label
+    ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='10px system-ui';
+    ctx.textAlign='center';
+    ctx.fillText(i+1,p.px,p.py+26);
+  });
+
+  // Ponto atual — grande e pulsante
+  if(calStep<SEQ.length){
+    // Instrução central na tela
+    const cur=SEQ[calStep];
+    // Box de instrução
+    const bw=Math.min(W-40,320);
+    const bx=(W-bw)/2, by=H*0.12;
+    ctx.fillStyle='rgba(0,0,0,0.75)';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(bx,by,bw,52,10);
+    else ctx.rect(bx,by,bw,52);
+    ctx.fill();
+    ctx.strokeStyle=cur.color+'99';ctx.lineWidth=1.5;ctx.stroke();
+
+    ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font='11px system-ui';ctx.textAlign='center';
+    ctx.fillText(`Passo ${calStep+1} de 11`,W/2,by+17);
+    ctx.fillStyle=cur.color;ctx.font='bold 13px system-ui';
+    ctx.fillText(cur.hint,W/2,by+38);
+
+    // Indicador de toque
+    const tx=W/2, ty=H*0.6;
+    const t=Date.now()/600;
+    const pulse=1+Math.sin(t)*0.15;
+    ctx.beginPath();ctx.arc(tx,ty,30*pulse,0,Math.PI*2);
+    ctx.strokeStyle=cur.color+'50';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.arc(tx,ty,20,0,Math.PI*2);
+    ctx.strokeStyle=cur.color+'80';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(tx,ty,8,0,Math.PI*2);
+    ctx.fillStyle=cur.color;ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='10px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('👆',tx,ty);ctx.textBaseline='alphabetic';
+
+    ctx.fillStyle='rgba(255,255,255,0.45)';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText('Toque no adesivo correspondente na imagem',W/2,H*0.75);
+  }
+}
+
+function drawCalibratedCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const W=canvas.width,H=canvas.height;
+  const pts={};
+  calPts.forEach(p=>{pts[p.key]={x:p.px,y:p.py};});
+
+  // Linhas da quadra calibrada
+  ctx.strokeStyle='rgba(200,245,58,0.45)';
+  ctx.lineWidth=1.5;ctx.setLineDash([5,5]);
+  const lines=[
+    ['tl','tr'],['bl','br'],['tl','bl'],['tr','br']
+  ];
+  lines.forEach(([a,b])=>{
+    if(pts[a]&&pts[b]){
+      ctx.beginPath();ctx.moveTo(pts[a].x,pts[a].y);ctx.lineTo(pts[b].x,pts[b].y);ctx.stroke();
+    }
+  });
+  // Linhas de saque
+  ctx.strokeStyle='rgba(234,179,8,0.4)';
+  if(pts.sln&&pts.srn){ctx.beginPath();ctx.moveTo(pts.sln.x,pts.sln.y);ctx.lineTo(pts.srn.x,pts.srn.y);ctx.stroke();}
+  if(pts.slf&&pts.srf){ctx.beginPath();ctx.moveTo(pts.slf.x,pts.slf.y);ctx.lineTo(pts.srf.x,pts.srf.y);ctx.stroke();}
+  ctx.setLineDash([]);
+
+  // Marcadores
+  calPts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.px,p.py,5,0,Math.PI*2);
+    ctx.fillStyle=SEQ[i].color;ctx.fill();
+  });
+}
+
+// Loop de animação durante calibração
+let calAnimId=null;
+function calLoop(){
+  drawCalCanvas();
+  calAnimId=requestAnimationFrame(calLoop);
+}
+
+function startCal(){
+  calStep=0;calPts=[];calibrated=false;
+  document.getElementById('ui-cal').style.display='';
+  document.getElementById('ui-play').style.display='none';
+  document.getElementById('pips').style.display='none';
+  document.getElementById('score-mini').classList.remove('visible');
+  updateBadge('Calibrar','hbadge-cal');
+  setInfo('warn','Toque no adesivo '+(calStep+1)+'/11 na imagem');
+
+  // Ativa toque no canvas
+  canvas.classList.add('cal-active');
+  canvas.addEventListener('touchstart',onCalTap,{passive:false});
+  canvas.addEventListener('click',onCalClick);
+
+  updateCalBar();
+  if(calAnimId) cancelAnimationFrame(calAnimId);
+  calLoop();
+  toast('Toque em cada adesivo na ordem indicada');
+}
+
+function onCalTap(e){
+  e.preventDefault();
+  const t=e.touches[0];
+  const r=canvas.getBoundingClientRect();
+  const sx=canvas.width/r.width, sy=canvas.height/r.height;
+  tap((t.clientX-r.left)*sx,(t.clientY-r.top)*sy);
+}
+function onCalClick(e){
+  const r=canvas.getBoundingClientRect();
+  const sx=canvas.width/r.width, sy=canvas.height/r.height;
+  tap((e.clientX-r.left)*sx,(e.clientY-r.top)*sy);
+}
+
+function tap(x,y){
+  if(calStep>=SEQ.length) return;
+  const cur=SEQ[calStep];
+  calPts.push({key:cur.key,px:x,py:y,mx:cur.mx,my:cur.my});
+  calStep++;
+  speak('Ok');
+  toast(`✓ ${cur.label} — ${calStep}/11`);
+  updateCalBar();
+
+  if(calStep>=SEQ.length){
+    finishCal();
+  } else {
+    setInfo('warn',`Toque no adesivo ${calStep+1}/11 — ${SEQ[calStep].hint}`);
+    updateBadge(`Cal ${calStep+1}/11`,'hbadge-cal');
+  }
+}
+
+function updateCalBar(){
+  document.getElementById('cal-fill').style.width=((calStep/SEQ.length)*100)+'%';
+}
+
+function finishCal(){
+  cancelAnimationFrame(calAnimId);
+  canvas.classList.remove('cal-active');
+  canvas.removeEventListener('touchstart',onCalTap);
+  canvas.removeEventListener('click',onCalClick);
+
+  calibrated=true;
+  drawCalibratedCanvas();
+
+  document.getElementById('ui-cal').style.display='none';
+  document.getElementById('ui-play').style.display='flex';
+  document.getElementById('pips').style.display='flex';
+  document.getElementById('score-mini').classList.add('visible');
+  document.getElementById('cal-bar').style.display='none';
+
+  updateBadge('1º saque','hbadge-serve');
+  setInfo('ok','Sistema calibrado! Use os botões para marcar cada jogada.');
+  updatePips();
+  speak('Calibração completa. Pode sacar!');
+  toast('🎯 Calibrado! Sistema pronto para uso.');
+}
+
+function reCal(){
+  if(calAnimId) cancelAnimationFrame(calAnimId);
+  document.getElementById('cal-bar').style.display='block';
+  document.getElementById('ui-play').style.display='none';
+  document.getElementById('ui-cal').style.display='';
+  document.getElementById('pips').style.display='none';
+  document.getElementById('score-mini').classList.remove('visible');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawIdleCanvas();
+  toast('Calibração reiniciada');
+}
+
+/* ══════════════════════════════
+   JOGO
+══════════════════════════════ */
+let gs={
+  phase:'serve',serveAttempt:1,server:'A',
+  pts:{A:0,B:0},games:{A:0,B:0},sets:{A:0,B:0},deuce:false
+};
+
+function markBall(inside){
+  const isServe=gs.phase==='serve'||gs.phase==='fault';
+  if(isServe){
+    if(inside){
+      showBanner('IN','rgba(34,197,94,0.15)');speak('In');
+      gs.phase='rally';gs.serveAttempt=1;
+      updateBadge('Rally','hbadge-rally');
+      setInfo('ok','Saque dentro! Rally em andamento.');
+      updatePips();toast('✓ Saque dentro — jogo inicia');
+    } else {
+      showBanner('OUT','rgba(239,68,68,0.18)');speak('Out');
+      if(gs.serveAttempt===1){
+        gs.phase='fault';gs.serveAttempt=2;
+        updateBadge('2º saque','hbadge-fault');
+        setInfo('warn','Falta! 2º saque disponível.');
+        updatePips();toast('Falta — tente o 2º saque');
+      } else {
+        speak('Double fault');
+        toast('⚡ Dupla falta — ponto adversário');
+        awardPt(gs.server==='A'?'B':'A');
+        resetServe();
+      }
+    }
+  } else {
+    if(inside){
+      showBanner('IN','rgba(34,197,94,0.15)');speak('In');
+      toast('✓ Dentro — ponto!');
+      awardPt(gs.server);resetServe();
+    } else {
+      showBanner('OUT','rgba(239,68,68,0.18)');speak('Out');
+      toast('⚡ OUT! Ponto adversário');
+      awardPt(gs.server==='A'?'B':'A');resetServe();
+    }
+  }
+  updateScoreDisplay();
+}
+
+function resetServe(){
+  gs.phase='serve';gs.serveAttempt=1;
+  updateBadge('1º saque','hbadge-serve');
+  setInfo('ok','Próximo ponto. Aguardando saque.');
+  updatePips();
+}
+
+function awardPt(w){
+  const l=w==='A'?'B':'A';
+  if(gs.deuce){
+    if(gs.pts[w]>gs.pts[l]){winGame(w);return;}
+    gs.pts[w]++;
+  } else if(gs.pts[w]===3&&gs.pts[l]===3){
+    gs.deuce=true;gs.pts[w]++;toast('Deuce!');
+  } else if(gs.pts[w]===3){
+    winGame(w);return;
+  } else {
+    gs.pts[w]++;
+  }
+  updateScoreDisplay();
+}
+
+function winGame(w){
+  gs.games[w]++;
+  gs.pts={A:0,B:0};gs.deuce=false;
+  const dif=gs.games[w]-gs.games[w==='A'?'B':'A'];
+  if(gs.games[w]>=6&&dif>=2){
+    gs.sets[w]++;gs.games={A:0,B:0};
+    toast(`🏆 SET para jogador ${w}!`);
+  } else {
+    toast(`Game para jogador ${w}! (${gs.games.A}-${gs.games.B})`);
+  }
+  gs.server=gs.server==='A'?'B':'A';
+}
+
+function resetGame(){
+  gs={phase:'serve',serveAttempt:1,server:'A',pts:{A:0,B:0},games:{A:0,B:0},sets:{A:0,B:0},deuce:false};
+  updateBadge('1º saque','hbadge-serve');
+  updateScoreDisplay();updatePips();
+  toast('Jogo reiniciado');
+  hideScore();
+}
+
+function updateScoreDisplay(){
+  const pts=['0','15','30','40'];
+  const{pts:p,deuce:d}=gs;
+  let dA,dB;
+  if(d){dA=p.A>p.B?'ADV':'40';dB=p.B>p.A?'ADV':'40';}
+  else{dA=pts[p.A]||'0';dB=pts[p.B]||'0';}
+  ['sc-a','sf-a'].forEach(id=>document.getElementById(id).textContent=dA);
+  ['sc-b','sf-b'].forEach(id=>document.getElementById(id).textContent=dB);
+  document.getElementById('sfm-a').textContent=`Games: ${gs.games.A} | Sets: ${gs.sets.A}`;
+  document.getElementById('sfm-b').textContent=`Games: ${gs.games.B} | Sets: ${gs.sets.B}`;
+}
+
+function updatePips(){
+  const p1=document.getElementById('pp1'),p2=document.getElementById('pp2');
+  if(gs.phase==='serve'&&gs.serveAttempt===1){p1.className='pp pp-ok';p2.className='pp';}
+  else if(gs.phase==='fault'){p1.className='pp pp-used';p2.className='pp pp-warn';}
+  else{p1.className='pp pp-ok';p2.className='pp pp-ok';}
+}
+
+function showBanner(txt,bg){
+  const b=document.getElementById('banner');
+  const t=document.getElementById('banner-txt');
+  const bg2=document.getElementById('banner-bg');
+  t.textContent=txt;
+  t.className='banner-txt '+(txt==='OUT'?'':'');
+  t.style.textShadow=txt==='OUT'?'0 0 60px #ef4444,0 4px 24px rgba(0,0,0,.6)':'0 0 60px #22c55e,0 4px 24px rgba(0,0,0,.6)';
+  bg2.style.background=bg;
+  b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'),1400);
+}
+
+/* ══════════════════════════════
+   HUD HELPERS
+══════════════════════════════ */
+function setInfo(dot,txt){
+  const d=document.getElementById('idot');
+  const t=document.getElementById('itext');
+  d.className='idot '+dot;t.textContent=txt;
+}
+function updateBadge(txt,cls){
+  const b=document.getElementById('hud-badge');
+  b.textContent=txt;b.className='hud-badge '+cls;
+}
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+window.addEventListener('load',()=>{
+  // Preload vozes
+  if(window.speechSynthesis){
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+  }
+
+  const statusEl=document.getElementById('cam-status');
+  const btnCam=document.getElementById('btn-cam');
+
+  // Verifica se mediaDevices está disponível
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    statusEl.textContent='⚠ Câmera não disponível neste contexto. Abra o arquivo no Chrome e confirme a permissão de câmera quando solicitada.';
+    statusEl.className='alert alert-err';
+    btnCam.disabled=false;
+    btnCam.textContent='📷 Tentar abrir câmera';
+    // Mesmo assim deixa tentar
+  } else {
+    statusEl.textContent='✓ Câmera detectada — toque em Abrir câmera';
+    statusEl.className='alert alert-ok';
+    btnCam.disabled=false;
+  }
+});
+</script>
+</body>
+</html>
