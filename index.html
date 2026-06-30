@@ -444,6 +444,9 @@ button{
       <div class="alert alert-warn">
         <strong>Importante:</strong> uma câmera no poste, no meio do comprimento da rede, não consegue ver os 2 cantos do <strong>próprio</strong> lado ao mesmo tempo — eles ficam a 90° cada lado, fora do alcance de qualquer lente. Por isso, <strong>cada celular julga o lado OPOSTO</strong> da quadra, que fica dentro do seu campo de visão (~95° de abertura).
       </div>
+      <div class="alert alert-err" style="margin-top:8px">
+        🔴 <strong>Aprendizado do teste em quadra:</strong> com o celular em <strong>retrato (em pé)</strong>, o FOV horizontal usa o lado curto do sensor (~45°) e não alcança os cantos distantes. A correção: celular <strong>deitado (paisagem)</strong> + câmera <strong>ultra-wide</strong> + altura <strong>1,55m</strong> — assim o FOV horizontal sobe para ~116°, com folga.
+      </div>
       <div class="court-wrap" style="margin-top:10px">
         <svg viewBox="0 0 280 200" width="100%" style="display:block">
           <rect width="280" height="200" fill="#152a18" rx="6"/>
@@ -515,28 +518,39 @@ button{
       </div>
 
       <div id="panel-android" style="display:flex;flex-direction:column;gap:0">
+        <div class="alert alert-warn" style="margin-bottom:12px">📱 <strong>Celular DEITADO (paisagem)</strong> — em pé (retrato) a câmera não alcança os cantos distantes da quadra.</div>
         <div class="gstep">
           <div class="gstep-n">1</div>
-          <div><div class="gstep-title">Suporte no poste lateral</div>
-          <div class="gstep-body">Braçadeira de microfone (clamp 25–35mm) presa ao poste, próximo ao topo. Custo: R$15–40.</div></div>
+          <div><div class="gstep-title">Suporte ACIMA do poste lateral</div>
+          <div class="gstep-body">Suporte/haste fixado acima do topo do poste, segurando o celular na horizontal (paisagem). Custo: R$25–60.</div></div>
         </div>
         <div class="gstep">
           <div class="gstep-n">2</div>
-          <div><div class="gstep-title">Altura: 1,05 m</div>
-          <div class="gstep-body">Meça da lente traseira até o chão. Abaixo do topo do poste (1,07m), sem obstruir a rede.</div></div>
+          <div><div class="gstep-title">Altura: 1,55 m</div>
+          <div class="gstep-body">Meça da lente traseira até o chão. Acima do topo do poste padrão (1,07m) — exige suporte com extensão.</div></div>
         </div>
         <div class="gstep">
           <div class="gstep-n">3</div>
+          <div><div class="gstep-title">Use a câmera ULTRA-WIDE (grande angular)</div>
+          <div class="gstep-body">No app de câmera, selecione a lente 0.5x/ultra-wide antes de abrir o TennisEye — ela tem campo de visão maior, essencial para cobrir o lado oposto da quadra.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">4</div>
           <div><div class="gstep-title">Ângulo: voltado para a quadra inteira</div>
           <div class="gstep-body">Aponte na diagonal, cobrindo da linha de fundo do seu lado até o canto mais distante do lado oposto.</div></div>
         </div>
         <div class="gstep">
-          <div class="gstep-n">4</div>
+          <div class="gstep-n">5</div>
+          <div><div class="gstep-title">Offset lateral (se a câmera não fica exatamente no poste)</div>
+          <div class="gstep-body">Meça quantos cm a lente fica deslocada para fora do poste. Ajuste o valor em <code style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px">CAM_OFFSET_M</code> no código se for diferente de 5cm.</div></div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-n">6</div>
           <div><div class="gstep-title">Selecione Poste A ou B no app</div>
           <div class="gstep-body">Na tela inicial, escolha em qual poste este celular está. Isso ajusta o cálculo de confiança por zona.</div></div>
         </div>
         <div class="gstep">
-          <div class="gstep-n">5</div>
+          <div class="gstep-n">7</div>
           <div><div class="gstep-title">Câmera não abre?</div>
           <div class="gstep-body">Ícone 🔒 na barra → Câmera → Permitir. Ou: Config. Android → Apps → Chrome → Permissões.</div></div>
         </div>
@@ -544,6 +558,7 @@ button{
 
       <div id="panel-ios" style="display:none;flex-direction:column;gap:0">
         <div class="alert alert-err" style="margin-bottom:12px">🚫 Use o <strong>Safari</strong>, não o Chrome, no iPhone.</div>
+        <div class="alert alert-warn" style="margin-bottom:12px">📱 Celular <strong>deitado (paisagem)</strong>, câmera ultra-wide selecionada antes de abrir o app.</div>
         <div class="gstep">
           <div class="gstep-n">1</div>
           <div><div class="gstep-title">Abrir no Safari</div>
@@ -552,7 +567,7 @@ button{
         <div class="gstep">
           <div class="gstep-n">2</div>
           <div><div class="gstep-title">Mesma instalação física</div>
-          <div class="gstep-body">1,05m de altura, poste lateral, selecione A ou B na tela inicial.</div></div>
+          <div class="gstep-body">1,55m de altura, poste lateral, celular deitado, câmera ultra-wide, selecione A ou B na tela inicial.</div></div>
         </div>
       </div>
     </div>
@@ -836,16 +851,29 @@ function showPermError(err){
    IMPORTANTE: a câmera no poste central da rede (y=hl) NÃO consegue
    ver os cantos do PRÓPRIO lado — ficariam a 90° (fora de qualquer FOV).
    Por isso, cada celular julga o lado OPOSTO da quadra, onde o ângulo
-   necessário é de ~95° (dentro do alcance de uma lente grande angular).
+   necessário é de ~95° (dentro do alcance de uma lente ultra grande angular).
+
+   ATUALIZADO após teste em quadra:
+   - Celular em PAISAGEM (deitado), não retrato — em retrato o FOV
+     horizontal usa o lado curto do sensor (~45°), insuficiente.
+     Em paisagem com câmera ULTRA-WIDE, o FOV horizontal sobe a ~116°.
+   - Altura subiu de 1,05m para 1,55m (suporte acima do poste).
+   - Câmera fica com offset lateral (alguns cm para FORA da quadra,
+     em relação ao poste) — configurável abaixo, ajustar conforme medição.
 ══════════════════════════════ */
 const C = {L:23.77, Ws:8.23, Wd:10.97, svc:6.40};
 const hl=C.L/2, hwd=C.Wd/2, hws=C.Ws/2;
-const CAM_H = 1.05;
-const RES_V = 1080, FOV_V_DEG = 65, FOV_H_DEG = 110;
+const CAM_H = 1.55;              // altura do suporte acima do poste
+const RES_V = 1080;
+const FOV_V_DEG = 84;             // vertical, ultra-wide em paisagem
+const FOV_H_DEG = 116;            // horizontal, ultra-wide em paisagem
+const CAM_OFFSET_M = 0.05;        // offset lateral medido em campo (~5cm para fora da quadra) — ajustar aqui
 
-// Posição real da câmera (sempre no poste do próprio lado)
+// Posição real da câmera (poste do próprio lado + offset lateral para fora)
 function myCamPos(){
-  return myPost==='A' ? {x:0, y:hl} : {x:C.Wd, y:hl};
+  return myPost==='A'
+    ? {x: -CAM_OFFSET_M, y: hl}
+    : {x: C.Wd + CAM_OFFSET_M, y: hl};
 }
 
 // Responsabilidade INVERTIDA: cada celular julga o lado OPOSTO
@@ -893,24 +921,24 @@ function seqForPost(post){
   // Os pontos do PRÓPRIO lado ficam fora do alcance (a 90°, atrás da câmera).
   // Por isso cada celular calibra os pontos do lado QUE ELE ENXERGA: o oposto.
   const allPts = [
-    {key:'corner_TL', label:'Canto sup. esq.', color:'#ef4444', mx:0, my:0},
-    {key:'corner_TR', label:'Canto sup. dir.', color:'#ef4444', mx:C.Wd, my:0},
-    {key:'corner_BL', label:'Canto inf. esq.', color:'#ef4444', mx:0, my:C.L},
-    {key:'corner_BR', label:'Canto inf. dir.', color:'#ef4444', mx:C.Wd, my:C.L},
-    {key:'svc_TL', label:'Saque sup. esq.', color:'#eab308', mx:hwd-hws, my:hl-C.svc},
-    {key:'svc_TC', label:'Saque sup. centro', color:'#eab308', mx:hwd, my:hl-C.svc},
-    {key:'svc_TR', label:'Saque sup. dir.', color:'#eab308', mx:hwd+hws, my:hl-C.svc},
-    {key:'svc_BL', label:'Saque inf. esq.', color:'#eab308', mx:hwd-hws, my:hl+C.svc},
-    {key:'svc_BC', label:'Saque inf. centro', color:'#eab308', mx:hwd, my:hl+C.svc},
-    {key:'svc_BR', label:'Saque inf. dir.', color:'#eab308', mx:hwd+hws, my:hl+C.svc},
-    {key:'net_center', label:'Centro da rede', color:'#3b82f6', mx:hwd, my:hl},
+    {key:'corner_TL', label:'Canto Superior Esquerdo', color:'#ef4444', mx:0, my:0},
+    {key:'corner_TR', label:'Canto Superior Direito', color:'#ef4444', mx:C.Wd, my:0},
+    {key:'corner_BL', label:'Canto Inferior Esquerdo', color:'#ef4444', mx:0, my:C.L},
+    {key:'corner_BR', label:'Canto Inferior Direito', color:'#ef4444', mx:C.Wd, my:C.L},
+    {key:'svc_TL', label:'Saque Superior Esquerdo', color:'#eab308', mx:hwd-hws, my:hl-C.svc},
+    {key:'svc_TC', label:'Saque Superior Centro', color:'#eab308', mx:hwd, my:hl-C.svc},
+    {key:'svc_TR', label:'Saque Superior Direito', color:'#eab308', mx:hwd+hws, my:hl-C.svc},
+    {key:'svc_BL', label:'Saque Inferior Esquerdo', color:'#eab308', mx:hwd-hws, my:hl+C.svc},
+    {key:'svc_BC', label:'Saque Inferior Centro', color:'#eab308', mx:hwd, my:hl+C.svc},
+    {key:'svc_BR', label:'Saque Inferior Direito', color:'#eab308', mx:hwd+hws, my:hl+C.svc},
+    {key:'net_center', label:'Centro da Rede', color:'#3b82f6', mx:hwd, my:hl},
   ];
   // Poste A enxerga e calibra o lado DIREITO (oposto); Poste B enxerga o ESQUERDO
   const filtered = allPts.filter(p => {
     if(post==='A') return p.mx >= hwd - 0.01;
     return p.mx <= hwd + 0.01;
   });
-  return filtered.map((p,i)=>({...p, hint: `${p.color==='#ef4444'?'🔴':p.color==='#eab308'?'🟡':'🔵'} ${p.label}`}));
+  return filtered.map((p,i)=>({...p, hint: p.label}));
 }
 
 let SEQ = seqForPost('A');
@@ -938,41 +966,42 @@ function drawCalCanvas(){
   calPts.forEach((p,i)=>{
     ctx.beginPath();ctx.arc(p.px,p.py,20,0,Math.PI*2);
     ctx.fillStyle=SEQ[i].color+'44';ctx.fill();
-    ctx.beginPath();ctx.arc(p.px,p.py,12,0,Math.PI*2);
+    ctx.beginPath();ctx.arc(p.px,p.py,14,0,Math.PI*2);
     ctx.fillStyle=SEQ[i].color;ctx.fill();
     ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#000';ctx.font='bold 10px system-ui';
+    ctx.fillStyle='#000';ctx.font='bold 13px system-ui';
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('✓',p.px,p.py);ctx.textBaseline='alphabetic';
-    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='10px system-ui';
-    ctx.fillText(i+1,p.px,p.py+26);
+    ctx.fillText(String(i+1),p.px,p.py);ctx.textBaseline='alphabetic';
   });
   if(calStep<SEQ.length){
     const cur=SEQ[calStep];
-    const bw=Math.min(W-32,340),bx=(W-bw)/2,by=H*0.1;
-    ctx.fillStyle='rgba(0,0,0,0.8)';
+    const bw=Math.min(W-32,340),bx=(W-bw)/2,by=H*0.08;
+    ctx.fillStyle='rgba(0,0,0,0.82)';
     ctx.beginPath();
-    if(ctx.roundRect) ctx.roundRect(bx,by,bw,58,12);
-    else ctx.rect(bx,by,bw,58);
+    if(ctx.roundRect) ctx.roundRect(bx,by,bw,64,12);
+    else ctx.rect(bx,by,bw,64);
     ctx.fill();
     ctx.strokeStyle=cur.color+'bb';ctx.lineWidth=1.5;ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='11px system-ui';ctx.textAlign='center';
     ctx.fillText(`Passo ${calStep+1} de ${SEQ.length}`,W/2,by+18);
-    ctx.fillStyle=cur.color;ctx.font='bold 13px system-ui';
-    ctx.fillText(cur.hint,W/2,by+40);
+    ctx.fillStyle=cur.color;ctx.font='bold 16px system-ui';
+    ctx.fillText(`Toque (${calStep+1}): ${cur.label}`,W/2,by+42);
+
     const tx=W/2,ty=H*0.58;
     const pulse=1+Math.sin(Date.now()/550)*0.14;
-    ctx.beginPath();ctx.arc(tx,ty,34*pulse,0,Math.PI*2);
+    ctx.beginPath();ctx.arc(tx,ty,36*pulse,0,Math.PI*2);
     ctx.strokeStyle=cur.color+'44';ctx.lineWidth=2;ctx.stroke();
-    ctx.beginPath();ctx.arc(tx,ty,22,0,Math.PI*2);
+    ctx.beginPath();ctx.arc(tx,ty,26,0,Math.PI*2);
     ctx.strokeStyle=cur.color+'88';ctx.lineWidth=1.5;
     ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
-    ctx.beginPath();ctx.arc(tx,ty,9,0,Math.PI*2);
+    ctx.beginPath();ctx.arc(tx,ty,16,0,Math.PI*2);
     ctx.fillStyle=cur.color;ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('👆',tx,ty);ctx.textBaseline='alphabetic';
-    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='12px system-ui';ctx.textAlign='center';
-    ctx.fillText('Toque no adesivo correspondente',W/2,H*0.76);
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(String(calStep+1),tx,ty);ctx.textBaseline='alphabetic';
+
+    ctx.fillStyle='rgba(255,255,255,0.45)';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText(`Toque no adesivo nº ${calStep+1} no chão da quadra`,W/2,H*0.76);
   }
 }
 
@@ -1000,7 +1029,7 @@ function startCal(){
   document.getElementById('ui-play').style.display='none';
   document.getElementById('side-wrap').style.display='none';
   updateBadge('Calibrar','hbadge-cal');
-  setInfo('warn',`Toque no adesivo 1/${SEQ.length} — ${SEQ[0].hint}`);
+  setInfo('warn',`Toque (1): ${SEQ[0].label}`);
   canvas.classList.add('cal-active');
   if(IS_IOS){ canvas.addEventListener('touchend',onCalTapIOS,{passive:false}); }
   else { canvas.addEventListener('touchstart',onCalTap,{passive:false}); }
@@ -1024,11 +1053,11 @@ function tapXY(cx2,cy2){
   calPts.push({key:cur.key,px:x,py:y,mx:cur.mx,my:cur.my});
   calStep++;
   speak('Ok');
-  toast(`✓ ${cur.label} — ${calStep}/${SEQ.length}`);
+  toast(`✓ Ponto (${calStep}): ${cur.label} confirmado`);
   updateCalBar();
   if(calStep>=SEQ.length){ finishCal(); }
   else{
-    setInfo('warn',`Toque no adesivo ${calStep+1}/${SEQ.length} — ${SEQ[calStep].hint}`);
+    setInfo('warn',`Toque (${calStep+1}): ${SEQ[calStep].label}`);
     updateBadge(`Cal ${calStep+1}/${SEQ.length}`,'hbadge-cal');
   }
 }
