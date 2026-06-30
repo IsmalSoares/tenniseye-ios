@@ -301,18 +301,12 @@ button{
 .auto-phase-indicator.rally{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--green)}
 .api-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;animation:bl 1.4s infinite}
 
-.out-only-btn{
-  width:100%;padding:9px;border-radius:10px;font-size:12px;font-weight:700;
-  border:1.5px solid var(--red);background:rgba(239,68,68,.15);color:var(--red);
-  min-height:36px;display:flex;align-items:center;justify-content:center;gap:6px;
+.start-game-btn{
+  width:100%;padding:13px;border-radius:11px;font-size:14px;font-weight:700;
+  border:1.5px solid var(--accent);background:rgba(200,245,58,.18);color:var(--accent);
+  min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;
 }
-.out-only-btn:active{opacity:.7;transform:scale(.97)}
-
-.hbtn-let{
-  border-color:rgba(59,130,246,.35) !important;
-  background:rgba(59,130,246,.12) !important;
-  color:#3b9eff !important;
-}
+.start-game-btn:active{opacity:.7;transform:scale(.97)}
 
 .review-btn{
   width:100%;padding:7px;border-radius:8px;font-size:10.5px;font-weight:600;
@@ -621,12 +615,6 @@ button{
   <div id="ball-tracker-dot"></div>
   <div id="detect-marker"></div>
   <div class="hud-bot">
-    <div class="side-select-wrap" id="side-wrap" style="display:none">
-      <div class="zone-grid" id="zone-grid"></div>
-      <div class="uncertain-banner" id="uncertain-banner">
-        ⚠ Lance perto da linha em zona de erro alto — confirme visualmente antes de marcar
-      </div>
-    </div>
     <div class="info-bar">
       <div class="idot warn" id="idot"></div>
       <div class="itext" id="itext">Posicione no poste e toque em Calibrar</div>
@@ -644,26 +632,27 @@ button{
           <div>
             <div class="set-counter-label">Sets — A <span id="sets-a">0</span> × <span id="sets-b">0</span> B</div>
           </div>
-          <div style="display:flex;gap:6px">
-            <button class="set-win-btn" onclick="winSet('A')">+1 A</button>
-            <button class="set-win-btn" onclick="winSet('B')">+1 B</button>
+        </div>
+
+        <!-- ANTES de iniciar: só o botão de início -->
+        <div id="pre-game-wrap">
+          <button class="start-game-btn" onclick="startGame()">▶ Iniciar Jogo</button>
+        </div>
+
+        <!-- DEPOIS de iniciar: tudo automático, sem botões de marcação -->
+        <div id="in-game-wrap" style="display:none;flex-direction:column;gap:8px">
+          <div class="auto-phase-indicator" id="auto-phase-indicator">
+            <span class="api-dot" id="api-dot"></span>
+            <span id="api-text">🎾 SAQUE — 1ª tentativa</span>
           </div>
+          <div class="hbtn-row">
+            <button class="hbtn hbtn-sm" onclick="reCal()">↺ Recalibrar</button>
+            <button class="hbtn hbtn-sm" onclick="stopGame()">⏸ Parar jogo</button>
+          </div>
+          <button class="review-btn" id="review-btn" onclick="openReview()" style="display:none">
+            🔍 Conferir última marcação
+          </button>
         </div>
-        <div class="auto-phase-indicator" id="auto-phase-indicator">
-          <span class="api-dot" id="api-dot"></span>
-          <span id="api-text">🎾 SAQUE — 1ª tentativa</span>
-        </div>
-        <div class="hbtn-row" id="serve-in-row">
-          <button class="hbtn hbtn-in" onclick="markServeIn()" style="grid-column:span 2">✓ Saque entrou (inicia rally)</button>
-        </div>
-        <button class="out-only-btn" onclick="markOut()">✕ FORA</button>
-        <div class="hbtn-row">
-          <button class="hbtn hbtn-sm hbtn-let" onclick="markLet()">🥅 LET</button>
-          <button class="hbtn hbtn-sm" onclick="reCal()">↺ Recalibrar</button>
-        </div>
-        <button class="review-btn" id="review-btn" onclick="openReview()" style="display:none">
-          🔍 Conferir última marcação
-        </button>
       </div>
     </div>
   </div>
@@ -1062,7 +1051,6 @@ function startCal(){
   calStep=0;calPts=[];calibrated=false;
   document.getElementById('ui-cal').style.display='';
   document.getElementById('ui-play').style.display='none';
-  document.getElementById('side-wrap').style.display='none';
   updateBadge('Calibrar','hbadge-cal');
   setInfo('warn',`Toque (1): ${SEQ[0].label}`);
   canvas.classList.add('cal-active');
@@ -1108,74 +1096,48 @@ function finishCal(){
   drawCalibratedCanvas();
   document.getElementById('ui-cal').style.display='none';
   document.getElementById('ui-play').style.display='flex';
-  document.getElementById('side-wrap').style.display='flex';buildZoneGrid();
+  document.getElementById('pre-game-wrap').style.display='block';
+  document.getElementById('in-game-wrap').style.display='none';
   document.getElementById('cal-bar').style.display='none';
-  resetToServe();
-  speak('Calibração completa. Pode sacar!');
+  updateBadge('Pronto','hbadge-cal');
+  setInfo('ok',`Calibrado (Poste ${myPost}). Toque em Iniciar Jogo quando os dois celulares estiverem prontos.`);
+  speak('Calibração completa.');
   toast(`🎯 Calibrado! Poste ${myPost} pronto.`);
+}
+
+function startGame(){
+  document.getElementById('pre-game-wrap').style.display='none';
+  document.getElementById('in-game-wrap').style.display='flex';
+  gameRunning = true;
+  resetToServe();
+  speak('Jogo iniciado. Pode sacar!');
+  toast('▶ Jogo iniciado — marcação automática ativa');
   startBallDetection();
 }
 
+function stopGame(){
+  gameRunning = false;
+  stopBallDetection();
+  document.getElementById('pre-game-wrap').style.display='block';
+  document.getElementById('in-game-wrap').style.display='none';
+  updateBadge('Pronto','hbadge-cal');
+  setInfo('ok','Jogo parado. Toque em Iniciar Jogo para retomar.');
+  toast('⏸ Jogo parado');
+}
+
 function reCal(){
+  gameRunning = false;
   stopBallDetection();
   if(calAnimId) cancelAnimationFrame(calAnimId);
   calStep=0;calPts=[];calibrated=false;
   document.getElementById('cal-bar').style.display='block';
   document.getElementById('ui-play').style.display='none';
   document.getElementById('ui-cal').style.display='';
-  document.getElementById('side-wrap').style.display='none';
   ctx.clearRect(0,0,canvas.width,canvas.height);
   drawIdleCanvas();
   updateBadge('Calibrar','hbadge-cal');
   setInfo('warn','Toque em Iniciar calibração');
   toast('Calibração reiniciada');
-}
-
-/* ══════════════════════════════
-   JOGO — com responsabilidade por metade da largura
-══════════════════════════════ */
-
-// Posição da última bola marcada (definida pelo operador ao tocar na quadra,
-// ou usa o centro da própria metade como padrão para teste rápido)
-
-// Grid de 6 zonas representativas no lado de responsabilidade (oposto)
-// Cada zona tem uma posição (x,y) real na quadra usada para estimar erro
-function zonesForPost(post){
-  // Zonas no lado OPOSTO ao poste (que é o que ele enxerga e julga)
-  const sideX = post==='A' ? [hwd+hws*0.5, C.Wd-0.3] : [hwd-hws*0.5, 0.3];
-  return [
-    {key:'svc_near', label:'Saque\nperto', x: sideX[0], y: hl - C.svc*0.5},
-    {key:'svc_far',  label:'Saque\nfundo',  x: sideX[0], y: hl + C.svc*0.5},
-    {key:'mid_near', label:'Meio\nperto',   x: sideX[0], y: hl - C.svc*1.4},
-    {key:'mid_far',  label:'Meio\nfundo',   x: sideX[0], y: hl + C.svc*1.4},
-    {key:'corner_near', label:'Canto\nperto', x: sideX[1], y: 0.5},
-    {key:'corner_far',  label:'Canto\nfundo', x: sideX[1], y: C.L-0.5},
-  ];
-}
-
-let currentZone = null;
-
-function buildZoneGrid(){
-  const grid = document.getElementById('zone-grid');
-  const zones = zonesForPost(myPost);
-  grid.innerHTML = zones.map(z=>{
-    const {err} = evaluateConfidence(z.x, z.y);
-    return `<button class="zone-btn" id="zb-${z.key}" onclick="setBallZone('${z.key}')">${z.label.replace('\\n','<br>')}<span class="zone-conf">~${err}cm</span></button>`;
-  }).join('');
-  if(zones.length) setBallZone(zones[0].key);
-}
-
-function setBallZone(key){
-  const zones = zonesForPost(myPost);
-  const z = zones.find(zz=>zz.key===key);
-  if(!z) return;
-  currentZone = z;
-  document.querySelectorAll('.zone-btn').forEach(b=>b.classList.remove('sel'));
-  const btn = document.getElementById('zb-'+key);
-  if(btn) btn.classList.add('sel');
-
-  const {isUncertain} = evaluateConfidence(z.x, z.y);
-  document.getElementById('uncertain-banner').classList.toggle('show', isUncertain);
 }
 
 /* ══════════════════════════════
@@ -1392,6 +1354,7 @@ function pxToCourtMeters(px, py){
 }
 
 function processBallBounce(point){
+  if(!gameRunning) return; // só processa lances após "Iniciar Jogo"
   const courtPos = pxToCourtMeters(point.x, point.y);
   if(!courtPos) return;
 
@@ -1420,6 +1383,13 @@ function processBallBounce(point){
 
   if(isValid){
     showDetectMarker(screenX, screenY, 'in');
+    if(currentPhase === 'serve'){
+      // Saque entrou: transição automática para RALLY
+      currentPhase = 'rally';
+      updatePhaseIndicator();
+      toast('🟢 Auto: Saque dentro — rally em andamento');
+    }
+    // Durante rally, IN apenas sinaliza visualmente — ponto continua em jogo
   } else {
     showDetectMarker(screenX, screenY, 'out');
     captureReviewFrame(currentPhase==='serve' ? 'OUT no saque (auto)' : 'OUT na quadra (auto)');
@@ -1460,6 +1430,7 @@ function showDetectMarker(x, y, type){
    - LET → reseta para 1º saque sem penalizar (toque na rede)
 ══════════════════════════════ */
 let currentPhase = 'serve'; // 'serve' ou 'rally' — controlado AUTOMATICAMENTE
+let gameRunning = false; // só processa bounces após "Iniciar Jogo"
 let serveAttempt = 1; // 1 ou 2
 
 function updatePhaseIndicator(){
@@ -1484,11 +1455,6 @@ function resetToServe(){
   serveAttempt = 1;
   updatePhaseIndicator();
   setInfo('ok','Próximo ponto — validando caixa de saque.');
-}
-
-function ballIsMyResponsibility(){
-  if(!currentZone) return true;
-  return isMyResponsibility(currentZone.x);
 }
 
 /* ── Captura de frame para conferência ── */
@@ -1521,87 +1487,6 @@ function openReview(){
 }
 function closeReview(){
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
-}
-
-function markOut(){
-  const myResponsibility = ballIsMyResponsibility();
-
-  if(!myResponsibility){
-    showSilentIndicator();
-    toast(`🔇 Lado do Poste ${myPost==='A'?'B':'A'} — silenciado`, 2000);
-    return;
-  }
-
-  // Aplica a margem de incerteza de forma assimétrica:
-  // marcar FORA com erro alto significa que a bola pode na verdade
-  // estar DENTRO -- o aviso deixa isso explícito antes de notificar
-  let uncertainMsg = '';
-  if(currentZone){
-    const {isUncertain, err, margin} = evaluateConfidence(currentZone.x, currentZone.y);
-    if(isUncertain){
-      uncertainMsg = ` (erro ~${err}cm — confira)`;
-      toast(`⚠ Erro estimado ~${err}cm (margem ${margin}cm) — bola pode estar dentro. Confirme visualmente.`, 3200);
-    }
-  }
-
-  captureReviewFrame('FORA' + (currentPhase==='serve' ? ' no saque' : ' na quadra'));
-  showBanner('OUT','rgba(239,68,68,0.18)');
-  showDetectMarker(window.innerWidth/2, window.innerHeight*0.45, 'out');
-  speak('Out');
-
-  if(currentPhase==='serve'){
-    if(serveAttempt===1){
-      serveAttempt = 2;
-      updatePhaseIndicator();
-      setInfo('warn','Falta! 2ª tentativa de saque.'+uncertainMsg);
-      toast('Falta — 2º saque'+uncertainMsg);
-    } else {
-      toast('⚡ Dupla falta — fim do ponto'+uncertainMsg);
-      resetToServe();
-    }
-  } else {
-    toast('⚡ OUT na quadra — fim do ponto'+uncertainMsg);
-    resetToServe();
-  }
-}
-
-function markLet(){
-  const myResponsibility = ballIsMyResponsibility();
-  if(!myResponsibility){
-    showSilentIndicator();
-    toast(`🔇 Lado do Poste ${myPost==='A'?'B':'A'} — silenciado`, 2000);
-    return;
-  }
-  if(currentPhase!=='serve'){
-    toast('LET só se aplica durante o saque', 2200);
-    return;
-  }
-  captureReviewFrame('LET (toque na rede)');
-  showBanner('LET','rgba(59,130,246,0.18)');
-  speak('Let');
-  toast('🥅 Let — repete o mesmo saque (sem penalidade)');
-  // LET não avança tentativa nem muda fase — repete a mesma tentativa atual
-  updatePhaseIndicator();
-}
-
-// Quando a bola entra (não é chamado por botão — só usado internamente
-// para transição de SAQUE→RALLY, disparado pelo botão "Dentro" implícito:
-// como o piloto só tem o botão FORA, a transição para RALLY acontece
-// quando o jogador simplesmente continua o ponto sem marcar FORA.
-// Esse botão existe para o operador confirmar explicitamente que o
-// saque entrou, iniciando o rally.
-function markServeIn(){
-  const myResponsibility = ballIsMyResponsibility();
-  if(!myResponsibility){
-    showSilentIndicator();
-    return;
-  }
-  if(currentPhase!=='serve') return;
-  currentPhase = 'rally';
-  updatePhaseIndicator();
-  showDetectMarker(window.innerWidth/2, window.innerHeight*0.45, 'in');
-  speak('In');
-  toast('✓ Saque dentro — rally em andamento');
 }
 
 function showSilentIndicator(){
