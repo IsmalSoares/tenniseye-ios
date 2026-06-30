@@ -439,6 +439,22 @@ button{
     </div>
   </div>
 
+  <div class="post-select">
+    <div class="post-label">Modalidade do jogo:</div>
+    <div class="post-grid">
+      <button class="post-card sel" id="mode-singles-card" onclick="selectMatchMode('singles')">
+        <div class="post-icon">🎾</div>
+        <div class="post-name" style="color:var(--accent)">Simples</div>
+        <div class="post-desc">Linha interna (8,23m) — sem corredores</div>
+      </button>
+      <button class="post-card" id="mode-doubles-card" onclick="selectMatchMode('doubles')">
+        <div class="post-icon">🎾</div>
+        <div class="post-name">Duplas</div>
+        <div class="post-desc">Linha externa (10,97m) — com corredores</div>
+      </button>
+    </div>
+  </div>
+
   <div id="cam-status" class="alert alert-warn">Verificando câmera...</div>
   <button class="big-btn btn-start" id="btn-cam" onclick="startCamera()" disabled>📷 Abrir câmera</button>
   <button class="big-btn btn-guide" onclick="showScreen('sc-guide')">📋 Guia de instalação e adesivos</button>
@@ -712,6 +728,35 @@ function selectPost(p){
   tag.className = 'post-tag ' + (p==='A' ? 'post-tag-a' : 'post-tag-b');
   const calLabel = document.getElementById('cal-side-label');
   if(calLabel) calLabel.textContent = p==='A' ? 'esquerda' : 'direita';
+}
+
+/* ══════════════════════════════
+   MODALIDADE: SIMPLES OU DUPLAS
+   Define qual largura é considerada "dentro da quadra" no rally.
+   Simples usa a linha interna (8,23m); duplas usa a linha externa
+   com corredores (10,97m). Os adesivos vermelhos continuam colados
+   nos cantos de duplas (mais fáceis de ver), mas o app sabe qual
+   linha vale como "fora" de acordo com a modalidade escolhida.
+══════════════════════════════ */
+let matchMode = 'singles'; // 'singles' ou 'doubles'
+
+function selectMatchMode(mode){
+  matchMode = mode;
+  document.getElementById('mode-singles-card').classList.toggle('sel', mode==='singles');
+  document.getElementById('mode-doubles-card').classList.toggle('sel', mode==='doubles');
+}
+
+// Largura efetiva da quadra para fins de "dentro/fora", conforme modalidade
+function effectiveCourtWidth(){
+  return matchMode === 'singles' ? C.Ws : C.Wd;
+}
+// Deslocamento da borda efetiva em relação ao eixo central (para simples,
+// a linha fica recuada pelo tamanho do corredor de cada lado)
+function effectiveCourtBounds(){
+  if(matchMode === 'singles'){
+    return {left: hwd - hws, right: hwd + hws};
+  }
+  return {left: 0, right: C.Wd};
 }
 
 /* ══════════════════════════════
@@ -1364,7 +1409,8 @@ function processBallBounce(point){
   }
 
   // Define zona válida conforme fase atual
-  const inCourt = courtPos.x >= 0 && courtPos.x <= C.Wd && courtPos.y >= 0 && courtPos.y <= C.L;
+  const bounds = effectiveCourtBounds();
+  const inCourt = courtPos.x >= bounds.left && courtPos.x <= bounds.right && courtPos.y >= 0 && courtPos.y <= C.L;
   let isValid;
   if(currentPhase === 'serve'){
     // Caixa de saque: metade da largura (lado do servidor) x profundidade até a linha de saque
