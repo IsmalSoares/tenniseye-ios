@@ -1,1594 +1,930 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0a0a">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>TennisEye</title>
 <style>
+/* ── RESET & TOKENS ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --accent:#c8f53a;--red:#ef4444;--amber:#eab308;--green:#22c55e;
-  --blue:#3b82f6;--orange:#f97316;
+  --green:#22c55e;--red:#ef4444;--amber:#eab308;--blue:#3b82f6;
+  --accent:#c8f53a;--white:#fff;--bg:#0a0a0a;
+  --sur1:rgba(255,255,255,.05);--sur2:rgba(255,255,255,.08);
+  --brd:rgba(255,255,255,.12);--txt:rgba(255,255,255,.9);--muted:rgba(255,255,255,.45);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{
-  width:100%;height:100%;overflow:hidden;
-  background:#000;color:#fff;
-  font-family:system-ui,-apple-system,'SF Pro Text',sans-serif;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:none;
-  user-select:none;
-  position:fixed;
-  overscroll-behavior:none;
-}
-button{
-  font-family:inherit;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  -webkit-appearance:none;
-  appearance:none;
-}
-
-/* ── CÂMERA ── */
-#video{
-  position:fixed;inset:0;width:100%;height:100%;
-  object-fit:cover;display:block;background:#000;z-index:1;
-}
-#canvas{
-  position:fixed;inset:0;width:100%;height:100%;
-  z-index:2;pointer-events:none;
-}
-#canvas.cal-active{pointer-events:all;cursor:crosshair}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
 
 /* ── TELAS ── */
-.screen{
-  position:fixed;inset:0;z-index:10;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  background:rgba(0,0,0,.94);
-  padding:24px;gap:16px;
-  transition:opacity .25s;
-}
-.screen.off{opacity:0;pointer-events:none}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;overflow-y:auto;
+  padding:max(env(safe-area-inset-top,16px),16px) 16px
+         max(env(safe-area-inset-bottom,16px),16px);gap:12px;
+  background:var(--bg);z-index:10}
+.screen.off{display:none}
 
 /* ── HOME ── */
-#sc-home{text-align:center;gap:18px}
-.logo{font-size:46px;font-weight:700;letter-spacing:-2px}
+.logo{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--white);margin-top:8px}
 .logo span{color:var(--accent)}
-.tagline{font-size:14px;color:rgba(255,255,255,.55);max-width:270px;line-height:1.5}
-.big-btn{
-  width:100%;max-width:320px;padding:17px;border-radius:14px;
-  font-size:16px;font-weight:700;border:none;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  min-height:58px;
-}
-.big-btn:active{opacity:.75;transform:scale(.97)}
-.btn-start{background:var(--accent);color:#000}
-.btn-guide{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.15)}
-.alert{
-  width:100%;max-width:320px;padding:11px 15px;border-radius:10px;
-  font-size:12px;line-height:1.5;border-left:3px solid;text-align:left;
-}
-.alert-warn{background:rgba(234,179,8,.1);border-color:var(--amber);color:rgba(255,255,255,.8)}
-.alert-err{background:rgba(239,68,68,.1);border-color:var(--red);color:rgba(255,255,255,.8)}
-.alert-ok{background:rgba(34,197,94,.1);border-color:var(--green);color:rgba(255,255,255,.8)}
-.alert-info{background:rgba(59,130,246,.1);border-color:var(--blue);color:rgba(255,255,255,.8)}
-
-/* ── SELEÇÃO DE POSTE A/B ── */
-.post-select{
-  width:100%;max-width:320px;
-  display:flex;flex-direction:column;gap:10px;
-}
-.post-label{font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;text-align:left}
-.post-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.post-card{
-  padding:16px 10px;border-radius:14px;border:2px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.04);display:flex;flex-direction:column;
-  align-items:center;gap:6px;min-height:90px;justify-content:center;
-}
+.logo-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.section-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.8px;align-self:flex-start;margin-top:4px}
+.post-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.post-card{padding:14px 10px;border-radius:12px;border:1.5px solid var(--brd);
+  background:var(--sur1);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
 .post-card.sel{border-color:var(--accent);background:rgba(200,245,58,.08)}
-.post-icon{font-size:24px}
-.post-name{font-size:14px;font-weight:700}
+.post-icon{font-size:22px}
+.post-name{font-size:13px;font-weight:600;color:var(--txt)}
 .post-card.sel .post-name{color:var(--accent)}
-.post-desc{font-size:10px;color:rgba(255,255,255,.4);text-align:center;line-height:1.4}
+.post-desc{font-size:10px;color:var(--muted);text-align:center;line-height:1.4}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.mode-card{padding:10px;border-radius:10px;border:1.5px solid var(--brd);
+  background:var(--sur1);cursor:pointer;text-align:center}
+.mode-card.sel{border-color:var(--blue);background:rgba(59,130,246,.1)}
+.mode-card .mc-title{font-size:12px;font-weight:600;color:var(--txt)}
+.mode-card.sel .mc-title{color:var(--blue)}
+.mode-card .mc-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.big-btn{width:100%;padding:14px;border-radius:12px;font-size:14px;font-weight:700;
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-start{background:var(--accent);color:#0a0a0a}
+.btn-start:disabled{opacity:.35;cursor:default}
+.btn-guide{background:var(--sur2);color:var(--txt);border:1px solid var(--brd)}
+.alert{width:100%;padding:10px 13px;border-radius:8px;font-size:11.5px;line-height:1.5}
+.alert-warn{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);color:#eab308}
+.alert-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#22c55e}
+.alert-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
 
-/* ── PERMISSÃO / ERRO ── */
-#sc-perm{text-align:center;gap:14px}
-.perm-icon{font-size:52px}
-.perm-title{font-size:22px;font-weight:700}
-.perm-body{font-size:14px;color:rgba(255,255,255,.55);max-width:280px;line-height:1.6}
-.perm-steps{width:100%;max-width:320px;text-align:left;display:flex;flex-direction:column;gap:8px}
-.perm-step{
-  padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.06);
-  font-size:13px;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.08);
-  line-height:1.5;
-}
-
-/* ── iOS BROWSER WARNING ── */
-#sc-ios{text-align:center;gap:16px;background:rgba(0,5,15,.97);padding:32px 24px}
-.ios-icon{font-size:56px;line-height:1}
-.ios-title{font-size:22px;font-weight:700}
-.ios-body{font-size:14px;color:rgba(255,255,255,.5);max-width:280px;line-height:1.6}
-.ios-steps{width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px;text-align:left}
-.ios-step{
-  padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.1);font-size:13px;color:rgba(255,255,255,.7);
-  line-height:1.55;display:flex;gap:10px;align-items:flex-start;
-}
-.ios-sn{
-  width:22px;height:22px;border-radius:50%;flex-shrink:0;margin-top:1px;
-  background:rgba(200,245,58,.15);border:1px solid rgba(200,245,58,.3);
-  color:var(--accent);font-size:11px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-}
-
-/* ── GUIA ── */
-#sc-guide{justify-content:flex-start;align-items:stretch;padding:0;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
-.guide-top{
-  display:flex;align-items:center;gap:10px;
-  padding:max(env(safe-area-inset-top,16px),16px) 16px 14px;
-  background:rgba(0,0,0,.8);position:sticky;top:0;z-index:5;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.back-btn{
-  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);
-  border:none;color:#fff;font-size:20px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.guide-scroll{padding:16px;display:flex;flex-direction:column;gap:20px}
-.gs-title{
-  font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--accent);display:flex;align-items:center;gap:6px;margin-bottom:8px;
-}
-.court-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px}
-.gstep{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-.gstep:last-child{border-bottom:none;padding-bottom:0}
-.gstep-n{
-  width:28px;height:28px;border-radius:50%;flex-shrink:0;
-  background:rgba(200,245,58,.1);border:1px solid rgba(200,245,58,.3);
-  color:var(--accent);font-size:12px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;margin-top:1px;
-}
-.gstep-title{font-size:13px;font-weight:600;margin-bottom:3px}
-.gstep-body{font-size:12px;color:rgba(255,255,255,.5);line-height:1.55}
-.sticker-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stk{
-  border-radius:12px;padding:14px 10px;border:1.5px solid;
-  display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
-}
-.stk-r{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
-.stk-y{border-color:rgba(234,179,8,.4);background:rgba(234,179,8,.06)}
-.stk-b{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.06)}
-.stk-circle{
-  border-radius:50%;width:48px;height:48px;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-size:15px;color:#000;
-}
-.stk-size{font-size:17px;font-weight:700;margin-top:2px}
-.stk-label{font-size:11px;color:rgba(255,255,255,.5);line-height:1.4}
-.stk-qty{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5)}
-
-/* tabs */
-.tab-row{display:flex;gap:0;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;margin-bottom:14px}
-.tab-btn{flex:1;padding:10px;font-size:13px;font-weight:600;border:none}
-
-/* ── HUD ── */
-#hud{position:fixed;inset:0;z-index:3;pointer-events:none;display:none}
-#hud.active{display:block}
-.hud-top{
-  position:absolute;top:0;left:0;right:0;
-  padding:max(env(safe-area-inset-top,10px),10px) 14px 10px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.75) 0%,transparent 100%);
-  display:flex;align-items:center;justify-content:space-between;pointer-events:all;
-}
-.hud-logo{font-size:15px;font-weight:700;letter-spacing:-.5px;display:flex;align-items:center;gap:6px}
+/* ── CÂMERA / HUD ── */
+#cam-screen{padding:0;background:#000}
+#cam-video,#cam-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#cam-canvas{z-index:5;pointer-events:none}
+#hud{position:absolute;inset:0;z-index:20;pointer-events:none;display:flex;flex-direction:column}
+.hud-top{display:flex;align-items:center;justify-content:space-between;
+  padding:max(env(safe-area-inset-top,10px),10px) 12px 8px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,transparent 100%);pointer-events:all}
+.hud-logo{font-size:15px;font-weight:800;color:var(--white);letter-spacing:-.5px}
 .hud-logo span{color:var(--accent)}
-.post-tag{
-  font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;
-  border:1px solid;
-}
-.post-tag-a{background:rgba(59,158,255,.15);color:#3b9eff;border-color:rgba(59,158,255,.4)}
-.post-tag-b{background:rgba(249,115,22,.15);color:#f97316;border-color:rgba(249,115,22,.4)}
-.hud-badge{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;border:1.5px solid}
-.hbadge-cal{background:rgba(200,245,58,.15);color:var(--accent);border-color:rgba(200,245,58,.4)}
-.hbadge-serve{background:rgba(234,179,8,.15);color:var(--amber);border-color:rgba(234,179,8,.4)}
-.hbadge-rally{background:rgba(34,197,94,.15);color:var(--green);border-color:rgba(34,197,94,.4)}
-.hbadge-fault{background:rgba(239,68,68,.15);color:var(--red);border-color:rgba(239,68,68,.4)}
-.hbadge-silent{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);border-color:rgba(255,255,255,.15)}
+.post-tag{padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700}
+.post-tag-a{background:rgba(249,115,22,.2);color:#f97316;border:1px solid rgba(249,115,22,.4)}
+.post-tag-b{background:rgba(59,158,255,.2);color:#3b9eff;border:1px solid rgba(59,158,255,.4)}
+.hud-badge{padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;border:1px solid}
+.hbadge-cal{background:rgba(200,245,58,.1);color:var(--accent);border-color:rgba(200,245,58,.3)}
+.hbadge-serve{background:rgba(234,179,8,.1);color:var(--amber);border-color:rgba(234,179,8,.3)}
+.hbadge-rally{background:rgba(34,197,94,.1);color:var(--green);border-color:rgba(34,197,94,.3)}
+.hbadge-fault{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.3)}
 
-.hud-bot{
-  position:absolute;bottom:0;left:0;right:0;
-  padding:8px 10px max(env(safe-area-inset-bottom,8px),8px);
-  background:linear-gradient(to top,rgba(0,0,0,.88) 60%,transparent 100%);
-  pointer-events:all;display:flex;flex-direction:column;gap:6px;
-}
+.hud-bot{position:absolute;bottom:0;left:0;right:0;pointer-events:all;
+  padding:10px 12px max(env(safe-area-inset-bottom,10px),10px);
+  background:linear-gradient(to top,rgba(0,0,0,.85) 60%,transparent 100%);
+  display:flex;flex-direction:column;gap:7px}
 .info-bar{display:flex;align-items:center;gap:6px}
 .idot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:#555}
 .idot.ok{background:var(--green)}
 .idot.warn{background:var(--amber);animation:bl .9s infinite}
 .idot.err{background:var(--red);animation:bl .4s infinite}
-.idot.silent{background:rgba(255,255,255,.25)}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
-.itext{font-size:10px;color:rgba(255,255,255,.7);flex:1;line-height:1.3}
+.itext{font-size:11px;color:rgba(255,255,255,.7);flex:1;line-height:1.4}
 
-.hud-btns{display:flex;flex-direction:column;gap:5px}
-.hbtn-row{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.hbtn{
-  padding:9px 6px;border-radius:9px;font-size:12px;font-weight:700;border:1.5px solid;
-  min-height:36px;display:flex;align-items:center;justify-content:center;gap:5px;
-  transition:opacity .15s;
-}
-.hbtn:active{opacity:.65;transform:scale(.96)}
-.hbtn-in{background:rgba(34,197,94,.15);color:var(--green);border-color:rgba(34,197,94,.4)}
-.hbtn-out{background:rgba(239,68,68,.15);color:var(--red);border-color:rgba(239,68,68,.4)}
-.hbtn-cal{background:rgba(200,245,58,.12);color:var(--accent);border-color:rgba(200,245,58,.3);width:100%}
-.hbtn-sm{
-  padding:7px 6px;border-radius:8px;font-size:10.5px;font-weight:600;
-  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
-  color:rgba(255,255,255,.65);min-height:30px;
-}
+/* calibração */
+.cal-bar-wrap{width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px}
+.cal-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.cal-btn{width:100%;padding:11px;border-radius:10px;font-size:13px;font-weight:700;
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.cal-btn-confirm{background:var(--accent);color:#0a0a0a}
+.cal-btn-confirm:disabled{opacity:.3}
+.cal-btn-sm{background:var(--sur2);color:var(--muted);border:1px solid var(--brd);
+  padding:8px;font-size:11px;font-weight:600;border-radius:8px;cursor:pointer;flex:1}
 
-/* contador simples de sets (sem placar detalhado) */
-.set-format{display:flex;gap:5px;margin-bottom:6px}
-.fmt-btn{
-  flex:1;padding:5px;border-radius:7px;font-size:9.5px;font-weight:600;
-  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);
-  color:rgba(255,255,255,.45);min-height:26px;
-}
-.fmt-btn.sel{border-color:var(--accent);background:rgba(200,245,58,.12);color:var(--accent)}
-.set-counter{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:5px 9px;border-radius:7px;background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.08);margin-bottom:6px;
-}
-.set-counter-label{font-size:9.5px;color:rgba(255,255,255,.5)}
-.set-counter-val{font-size:13px;font-weight:700;color:var(--white)}
-.set-win-btn{
-  padding:4px 7px;border-radius:5px;font-size:9px;font-weight:600;
-  border:1px solid rgba(34,197,94,.3);background:rgba(34,197,94,.1);color:#22c55e;
-}
-.phase-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:2px}
-.phase-tbtn{
-  padding:7px 6px;border-radius:8px;font-size:10.5px;font-weight:700;
-  border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);
-  color:rgba(255,255,255,.45);min-height:32px;
-  display:flex;flex-direction:column;align-items:center;gap:1px;
-}
-.phase-tbtn-sub{font-size:7.5px;font-weight:400;opacity:.7}
-.phase-tbtn.on-serve{border-color:var(--amber);background:rgba(234,179,8,.15);color:var(--amber)}
-.phase-tbtn.on-rally{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green)}
+/* jogo */
+.phase-ind{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;
+  font-size:11px;font-weight:600;transition:.3s}
+.phase-serve{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);color:var(--amber)}
+.phase-rally{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+.phase-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:bl 1.4s infinite}
+.start-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;
+  background:rgba(200,245,58,.15);border:1.5px solid var(--accent);color:var(--accent);cursor:pointer}
+.game-btns{display:flex;gap:6px}
+.g-btn{flex:1;padding:8px 4px;border-radius:8px;font-size:10.5px;font-weight:600;
+  border:1px solid var(--brd);background:var(--sur1);color:var(--muted);cursor:pointer}
+.review-btn{width:100%;padding:8px;border-radius:8px;font-size:11px;font-weight:600;
+  border:1px solid var(--brd);background:var(--sur1);color:rgba(255,255,255,.7);cursor:pointer;display:none}
 
-/* indicadores de detecção automática */
-#detect-marker{
-  position:fixed;z-index:25;
-  width:28px;height:28px;border-radius:50%;
-  transform:translate(-50%,-50%);
-  pointer-events:none;opacity:0;
-  transition:opacity .15s;
-  box-shadow:0 0 0 4px rgba(255,255,255,.25);
-}
-#detect-marker.show{opacity:1}
-#detect-marker.out{background:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.3),0 0 24px rgba(239,68,68,.6)}
-#detect-marker.in{background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.3),0 0 24px rgba(34,197,94,.6)}
-
-#ball-tracker-dot{
-  position:fixed;z-index:15;width:10px;height:10px;border-radius:50%;
-  background:rgba(255,235,59,.85);border:1.5px solid rgba(255,255,255,.6);
-  transform:translate(-50%,-50%);pointer-events:none;opacity:0;
-  transition:opacity .1s;
-}
-#ball-tracker-dot.show{opacity:1}
-
-#detect-status{
-  position:absolute;top:48px;left:50%;transform:translateX(-50%);
-  z-index:50;display:flex;align-items:center;gap:6px;
-  background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);
-  border-radius:100px;padding:4px 10px;font-size:10px;color:rgba(255,255,255,.6);
-  pointer-events:none;
-}
-.ds-dot{width:6px;height:6px;border-radius:50%;background:#555}
+/* indicadores de detecção */
+#detect-marker{position:absolute;z-index:30;width:26px;height:26px;border-radius:50%;
+  transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .15s}
+#detect-marker.show-out{opacity:1;background:var(--red);
+  box-shadow:0 0 0 4px rgba(239,68,68,.3),0 0 20px rgba(239,68,68,.6)}
+#detect-marker.show-in{opacity:1;background:var(--green);
+  box-shadow:0 0 0 4px rgba(34,197,94,.3),0 0 20px rgba(34,197,94,.6)}
+#ball-dot{position:absolute;z-index:15;width:9px;height:9px;border-radius:50%;
+  background:rgba(255,235,59,.9);border:1.5px solid rgba(255,255,255,.6);
+  transform:translate(-50%,-50%);pointer-events:none;opacity:0}
+#detect-status{position:absolute;top:46px;left:50%;transform:translateX(-50%);z-index:40;
+  display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.55);
+  border:1px solid var(--brd);border-radius:100px;padding:3px 10px;
+  font-size:9.5px;color:var(--muted);pointer-events:none}
+.ds-dot{width:5px;height:5px;border-radius:50%;background:#555}
 .ds-dot.active{background:var(--green);animation:bl 1s infinite}
-.auto-phase-indicator{
-  display:flex;align-items:center;gap:6px;
-  padding:6px 10px;border-radius:8px;
-  background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);
-  font-size:10.5px;font-weight:600;color:var(--amber);
-  transition:background .3s,border-color .3s,color .3s;
-}
-.auto-phase-indicator.rally{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--green)}
-.api-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;animation:bl 1.4s infinite}
 
-.start-game-btn{
-  width:100%;padding:13px;border-radius:11px;font-size:14px;font-weight:700;
-  border:1.5px solid var(--accent);background:rgba(200,245,58,.18);color:var(--accent);
-  min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.start-game-btn:active{opacity:.7;transform:scale(.97)}
-
-.review-btn{
-  width:100%;padding:7px;border-radius:8px;font-size:10.5px;font-weight:600;
-  border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
-  color:rgba(255,255,255,.75);min-height:30px;
-}
-.review-btn:active{opacity:.7}
-
-/* tela de conferência (frame congelado) */
-#sc-review{padding:0;justify-content:flex-start;background:#000}
-.review-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:max(env(safe-area-inset-top,16px),16px) 16px 12px;
-  background:rgba(0,0,0,.9);width:100%;
-}
-.review-title{font-size:16px;font-weight:700;color:var(--red)}
-.review-frame-wrap{position:relative;width:100%;flex:1;display:flex;align-items:center;justify-content:center;background:#0a0a0a}
-#review-canvas{max-width:100%;max-height:100%;display:block}
-.review-time-badge{
-  position:absolute;top:10px;right:10px;
-  background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);
-  border-radius:100px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.7);
-}
-.review-footer{
-  width:100%;padding:16px;background:rgba(0,0,0,.9);
-  display:flex;flex-direction:column;gap:12px;
-}
-.review-info-text{font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;text-align:center}
-.side-select-wrap{display:flex;flex-direction:column;gap:8px}
-.zone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.zone-btn{
-  padding:9px 4px;border-radius:8px;font-size:10px;font-weight:600;
-  border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);
-  color:rgba(255,255,255,.45);min-height:38px;
-  display:flex;flex-direction:column;align-items:center;gap:1px;
-}
-.zone-btn.sel{border-color:var(--accent);background:rgba(200,245,58,.12);color:var(--accent)}
-.zone-conf{font-size:8px;opacity:.7}
-.uncertain-banner{
-  display:none;align-items:center;gap:8px;padding:8px 12px;
-  border-radius:8px;background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.3);
-  font-size:11px;color:var(--amber);
-}
-.uncertain-banner.show{display:flex}
-
-/* OUT / IN banner */
-#banner{
-  position:fixed;inset:0;z-index:20;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:none;opacity:0;transition:opacity .08s;
-}
+/* banner */
+#banner{position:absolute;inset:0;z-index:50;display:flex;align-items:center;
+  justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
 #banner.show{opacity:1}
-.banner-bg{position:absolute;inset:0}
-.banner-txt{
-  font-size:clamp(80px,24vw,120px);font-weight:700;letter-spacing:6px;color:#fff;
-  position:relative;z-index:1;animation:pop .22s ease-out;
-}
-@keyframes pop{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+#banner-txt{font-size:72px;font-weight:900;letter-spacing:-2px;color:var(--white)}
 
-/* SILENT indicator (quando o celular decide não falar) */
-#silent-indicator{
-  position:fixed;inset:0;z-index:19;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:none;opacity:0;transition:opacity .15s;
-}
-#silent-indicator.show{opacity:1}
-.silent-box{
-  background:rgba(0,0,0,.7);border:1.5px solid rgba(255,255,255,.2);
-  border-radius:14px;padding:16px 24px;display:flex;flex-direction:column;
-  align-items:center;gap:6px;
-}
-.silent-icon{font-size:28px;opacity:.5}
-.silent-text{font-size:12px;color:rgba(255,255,255,.55);text-align:center}
-
-#toast{
-  position:fixed;bottom:180px;left:50%;transform:translateX(-50%);
-  background:rgba(0,0,0,.82);border:1px solid rgba(255,255,255,.12);
-  border-radius:100px;padding:8px 18px;font-size:12px;color:rgba(255,255,255,.8);
-  white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;
-  z-index:30;opacity:0;transition:opacity .25s;pointer-events:none;backdrop-filter:blur(8px);
-}
+/* toast */
+#toast{position:absolute;bottom:140px;left:50%;transform:translateX(-50%);z-index:60;
+  background:rgba(0,0,0,.8);border:1px solid var(--brd);border-radius:100px;
+  padding:7px 16px;font-size:11.5px;color:var(--txt);white-space:nowrap;
+  opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;
+  overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1}
 
-#cal-bar{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1);z-index:25;display:none}
-#cal-fill{height:100%;background:var(--accent);transition:width .3s;width:0%}
+/* revisão */
+#sc-review{padding:0;justify-content:flex-start;background:#000}
+.rev-header{display:flex;align-items:center;justify-content:space-between;
+  padding:max(env(safe-area-inset-top,14px),14px) 14px 10px;
+  background:rgba(0,0,0,.9);width:100%}
+.rev-title{font-size:15px;font-weight:700;color:var(--red)}
+.rev-close{width:28px;height:28px;border-radius:50%;background:var(--sur2);
+  border:1px solid var(--brd);color:var(--txt);font-size:16px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+.rev-frame{flex:1;width:100%;display:flex;align-items:center;background:#0a0a0a}
+#rev-canvas{max-width:100%;max-height:100%;display:block;margin:auto}
+.rev-footer{width:100%;padding:12px;background:rgba(0,0,0,.9)}
+.rev-info{font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;line-height:1.4}
 
-@supports not (backdrop-filter:blur(6px)){
-  .score-mini,.hud-top,.hud-bot{background:rgba(0,0,0,.85) !important}
-}
+/* guia */
+.guide-scroll{width:100%;display:flex;flex-direction:column;gap:10px}
+.gs-section{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.6px;margin-top:6px}
+.gs-step{display:flex;gap:9px;padding:10px;border-radius:10px;
+  background:var(--sur1);border:1px solid var(--brd)}
+.gs-n{width:22px;height:22px;border-radius:50%;background:rgba(200,245,58,.15);
+  border:1px solid rgba(200,245,58,.3);color:var(--accent);font-size:10px;
+  font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.gs-body .gs-title{font-size:12px;font-weight:500;color:var(--txt);line-height:1.4}
+.gs-body .gs-sub{font-size:11px;color:var(--muted);line-height:1.5;margin-top:2px}
 </style>
 </head>
 <body>
 
-<video id="video" autoplay playsinline muted webkit-playsinline x-webkit-airplay="deny"></video>
-<canvas id="canvas"></canvas>
-<div id="cal-bar"><div id="cal-fill"></div></div>
-
-<!-- ══ TELA: iOS ══ -->
-<div class="screen off" id="sc-ios">
-  <div class="ios-icon">🧭</div>
-  <div class="ios-title">Abra no Safari</div>
-  <div class="ios-body">No iPhone, a câmera só funciona no <strong>Safari</strong>. O Chrome para iOS não acessa câmera via web.</div>
-  <div class="ios-steps">
-    <div class="ios-step"><div class="ios-sn">1</div><div>Copie este link e cole no <strong>Safari</strong></div></div>
-    <div class="ios-step"><div class="ios-sn">2</div><div>Quando pedir câmera, toque em <strong>Permitir</strong></div></div>
-    <div class="ios-step"><div class="ios-sn">3</div><div>Se bloquear: <strong>Ajustes → Safari → Câmera → Permitir</strong></div></div>
-  </div>
-  <button class="big-btn btn-start" style="max-width:320px;width:100%" onclick="forceStartCam()">Continuar mesmo assim</button>
-  <button class="big-btn btn-guide" style="max-width:320px;width:100%;margin-top:4px" onclick="showScreen('sc-home')">← Voltar</button>
-</div>
-
-<!-- ══ TELA: HOME ══ -->
+<!-- ══ HOME ══ -->
 <div class="screen" id="sc-home">
   <div class="logo">Tennis<span>Eye</span></div>
-  <p class="tagline">Sistema de 2 câmeras — uma em cada poste lateral</p>
+  <div class="logo-sub">Sistema de arbitragem eletrônica</div>
 
-  <div class="post-select">
-    <div class="post-label">Este celular fica no poste:</div>
-    <div class="post-grid">
-      <button class="post-card sel" id="post-a-card" onclick="selectPost('A')">
-        <div class="post-icon">📍</div>
-        <div class="post-name" style="color:#3b9eff">Poste A</div>
-        <div class="post-desc">Esquerdo, olhando para a quadra</div>
-      </button>
-      <button class="post-card" id="post-b-card" onclick="selectPost('B')">
-        <div class="post-icon">📍</div>
-        <div class="post-name">Poste B</div>
-        <div class="post-desc">Direito, olhando para a quadra</div>
-      </button>
-    </div>
+  <div class="section-lbl">Este celular é o poste:</div>
+  <div class="post-grid">
+    <button class="post-card sel" id="post-a-card" onclick="selectPost('A')">
+      <div class="post-icon">📍</div>
+      <div class="post-name" style="color:#f97316">Poste A</div>
+      <div class="post-desc">Esquerdo — julga a metade direita da quadra</div>
+    </button>
+    <button class="post-card" id="post-b-card" onclick="selectPost('B')">
+      <div class="post-icon">📍</div>
+      <div class="post-name">Poste B</div>
+      <div class="post-desc">Direito — julga a metade esquerda da quadra</div>
+    </button>
   </div>
 
-  <div class="post-select">
-    <div class="post-label">Modalidade do jogo:</div>
-    <div class="post-grid">
-      <button class="post-card sel" id="mode-singles-card" onclick="selectMatchMode('singles')">
-        <div class="post-icon">🎾</div>
-        <div class="post-name" style="color:var(--accent)">Simples</div>
-        <div class="post-desc">Linha interna (8,23m) — sem corredores</div>
-      </button>
-      <button class="post-card" id="mode-doubles-card" onclick="selectMatchMode('doubles')">
-        <div class="post-icon">🎾</div>
-        <div class="post-name">Duplas</div>
-        <div class="post-desc">Linha externa (10,97m) — com corredores</div>
-      </button>
-    </div>
+  <div class="section-lbl">Modalidade:</div>
+  <div class="mode-grid">
+    <button class="mode-card sel" id="mode-singles" onclick="selectMode('singles')">
+      <div class="mc-title">Simples</div>
+      <div class="mc-sub">8,23m de largura</div>
+    </button>
+    <button class="mode-card" id="mode-doubles" onclick="selectMode('doubles')">
+      <div class="mc-title">Duplas</div>
+      <div class="mc-sub">10,97m de largura</div>
+    </button>
   </div>
 
   <div id="cam-status" class="alert alert-warn">Verificando câmera...</div>
-  <button class="big-btn btn-start" id="btn-cam" onclick="startCamera()" disabled>📷 Abrir câmera</button>
-  <button class="big-btn btn-guide" onclick="showScreen('sc-guide')">📋 Guia de instalação e adesivos</button>
+  <button class="big-btn btn-start" id="btn-open-cam" onclick="openCamera()" disabled>
+    📷 Calibrar e Iniciar
+  </button>
+  <button class="big-btn btn-guide" onclick="showScreen('sc-guide')">
+    📋 Guia de instalação
+  </button>
 </div>
 
-<!-- ══ TELA: PERMISSÃO ══ -->
-<div class="screen off" id="sc-perm">
-  <div class="perm-icon" id="perm-icon">📷</div>
-  <div class="perm-title" id="perm-title">Acesso à câmera</div>
-  <div class="perm-body" id="perm-body">O TennisEye precisa da câmera traseira.</div>
-  <div class="perm-steps" id="perm-steps"></div>
-  <button class="big-btn btn-start" onclick="startCamera()">Tentar novamente</button>
-  <button class="big-btn btn-guide" onclick="showScreen('sc-home')">← Voltar</button>
+<!-- ══ CÂMERA (calibração + jogo) ══ -->
+<div class="screen off" id="cam-screen">
+  <video id="cam-video" autoplay playsinline muted></video>
+  <canvas id="cam-canvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-top">
+      <div class="hud-logo">Tennis<span>Eye</span>
+        <span class="post-tag post-tag-a" id="hud-tag">A</span>
+      </div>
+      <div class="hud-badge hbadge-cal" id="hud-badge">Calibrar</div>
+    </div>
+
+    <div id="detect-status">
+      <span class="ds-dot" id="ds-dot"></span>
+      <span id="ds-text">Aguardando</span>
+    </div>
+
+    <div id="detect-marker"></div>
+    <div id="ball-dot"></div>
+
+    <div class="hud-bot">
+      <div class="info-bar">
+        <div class="idot warn" id="idot"></div>
+        <div class="itext" id="itext">Iniciando câmera...</div>
+      </div>
+
+      <!-- PAINEL: calibração -->
+      <div id="ui-cal" style="display:none;flex-direction:column;gap:7px">
+        <div class="cal-bar-wrap"><div class="cal-bar-fill" id="cal-fill" style="width:0%"></div></div>
+        <button class="cal-btn cal-btn-confirm" id="btn-confirm" onclick="confirmPoint()" disabled>
+          ✓ Confirmar bolinha
+        </button>
+        <div style="display:flex;gap:6px">
+          <button class="cal-btn-sm" onclick="skipToDuplicates()" id="btn-skip-dup">Pular duplas</button>
+          <button class="cal-btn-sm" onclick="reCal()">↺ Recalibrar</button>
+        </div>
+      </div>
+
+      <!-- PAINEL: pré-jogo -->
+      <div id="ui-pregame" style="display:none;flex-direction:column;gap:7px">
+        <button class="start-btn" onclick="startGame()">▶ Iniciar Jogo</button>
+        <div style="display:flex;gap:6px">
+          <button class="cal-btn-sm" onclick="reCal()">↺ Recalibrar</button>
+        </div>
+      </div>
+
+      <!-- PAINEL: jogo -->
+      <div id="ui-game" style="display:none;flex-direction:column;gap:7px">
+        <div class="phase-ind phase-serve" id="phase-ind">
+          <span class="phase-dot"></span>
+          <span id="phase-txt">🎾 SAQUE — 1ª tentativa</span>
+        </div>
+        <div class="game-btns">
+          <button class="g-btn" onclick="stopGame()">⏸ Parar</button>
+          <button class="g-btn" onclick="reCal()">↺ Recalibrar</button>
+        </div>
+        <button class="review-btn" id="review-btn" onclick="openReview()">
+          🔍 Conferir última marcação
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="banner"><div id="banner-txt"></div></div>
+  <div id="toast"></div>
 </div>
 
-<!-- ══ TELA: GUIA ══ -->
+<!-- ══ REVISÃO ══ -->
+<div class="screen off" id="sc-review">
+  <div class="rev-header">
+    <div class="rev-title" id="rev-title">Conferência</div>
+    <button class="rev-close" onclick="showScreen('cam-screen')">×</button>
+  </div>
+  <div class="rev-frame"><canvas id="rev-canvas"></canvas></div>
+  <div class="rev-footer">
+    <div class="rev-info" id="rev-info">Frame capturado no momento da marcação.</div>
+    <button class="big-btn btn-guide" onclick="showScreen('cam-screen')">Fechar</button>
+  </div>
+</div>
+
+<!-- ══ GUIA ══ -->
 <div class="screen off" id="sc-guide">
-  <div class="guide-top">
-    <button class="back-btn" onclick="showScreen('sc-home')">←</button>
-    <span style="font-size:17px;font-weight:700">Guia de instalação</span>
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+    <div style="font-size:16px;font-weight:700">Guia de instalação</div>
+    <button class="rev-close" onclick="showScreen('sc-home')">×</button>
   </div>
   <div class="guide-scroll">
-
-    <div>
-      <div class="gs-title">📍 Por que a visão é invertida</div>
-      <div class="alert alert-warn">
-        <strong>Importante:</strong> uma câmera no poste, no meio do comprimento da rede, não consegue ver os 2 cantos do <strong>próprio</strong> lado ao mesmo tempo — eles ficam a 90° cada lado, fora do alcance de qualquer lente. Por isso, <strong>cada celular julga o lado OPOSTO</strong> da quadra, que fica dentro do seu campo de visão (~95° de abertura).
-      </div>
-      <div class="alert alert-err" style="margin-top:8px">
-        🔴 <strong>Aprendizado do teste em quadra:</strong> com o celular em <strong>retrato (em pé)</strong>, o FOV horizontal usa o lado curto do sensor (~45°) e não alcança os cantos distantes. A correção: celular <strong>deitado (paisagem)</strong> + câmera <strong>ultra-wide</strong> + altura <strong>1,55m</strong> — assim o FOV horizontal sobe para ~116°, com folga.
-      </div>
-      <div class="court-wrap" style="margin-top:10px">
-        <svg viewBox="0 0 280 200" width="100%" style="display:block">
-          <rect width="280" height="200" fill="#152a18" rx="6"/>
-          <rect x="24" y="14" width="232" height="172" fill="#2d6a35" fill-opacity=".5" stroke="white" stroke-width="1.5"/>
-          <rect x="24" y="14" width="116" height="172" fill="#f97316" fill-opacity=".15"/>
-          <rect x="140" y="14" width="116" height="172" fill="#3b9eff" fill-opacity=".15"/>
-          <rect x="54" y="14" width="172" height="172" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>
-          <line x1="54" y1="68" x2="226" y2="68" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
-          <line x1="54" y1="132" x2="226" y2="132" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
-          <line x1="140" y1="14" x2="140" y2="186" stroke="#fff" stroke-width="1.5" stroke-dasharray="4,3"/>
-          <line x1="24" y1="100" x2="256" y2="100" stroke="white" stroke-width="2.5"/>
-          <circle cx="24" cy="100" r="8" fill="#3b9eff" stroke="white" stroke-width="1.5"/>
-          <text x="24" y="103" text-anchor="middle" fill="white" font-size="9" font-weight="bold">A</text>
-          <circle cx="256" cy="100" r="8" fill="#f97316" stroke="white" stroke-width="1.5"/>
-          <text x="256" y="103" text-anchor="middle" fill="white" font-size="9" font-weight="bold">B</text>
-          <path d="M24,100 L140,20 M24,100 L140,180" stroke="#3b9eff" stroke-width="1.5" opacity="0.5"/>
-          <path d="M256,100 L140,20 M256,100 L140,180" stroke="#f97316" stroke-width="1.5" opacity="0.5"/>
-          <text x="200" y="30" text-anchor="middle" fill="#3b9eff" font-size="8" font-weight="bold">A JULGA AQUI</text>
-          <text x="80" y="30" text-anchor="middle" fill="#f97316" font-size="8" font-weight="bold">B JULGA AQUI</text>
-        </svg>
-      </div>
-      <div class="alert alert-ok" style="margin-top:8px">
-        ✓ Setas mostram a direção real de visão: cada câmera mira para o lado oposto, onde tem campo de visão livre.
-      </div>
-    </div>
-
-    <div>
-      <div class="gs-title">📐 Compensação de margem de erro</div>
-      <div class="alert alert-info">
-        Como o lado oposto fica mais longe, o erro de posição aumenta com a distância: ~3cm perto da rede, até ~26cm no canto mais distante. O app calcula essa margem automaticamente e avisa quando o lance está perto demais da linha para confiar — nesses casos, confirme visualmente antes de marcar.
-      </div>
-    </div>
-
-    <div>
-      <div class="gs-title">🎯 Adesivos de calibração</div>
-      <div class="alert alert-info">
-        São 11 adesivos no total na quadra, mas <strong>cada celular calibra apenas 7</strong> — os do seu próprio lado, mais os 3 centrais compartilhados (saque centro × 2 e centro da rede).
-      </div>
-      <div class="sticker-row" style="margin-top:10px">
-        <div class="stk stk-r">
-          <div class="stk-circle" style="background:#ef4444">🔴</div>
-          <div class="stk-size" style="color:#ef4444">10×10 cm</div>
-          <div class="stk-label">4 cantos da quadra</div>
-          <div class="stk-qty">× 4 unidades</div>
-        </div>
-        <div class="stk stk-y">
-          <div class="stk-circle" style="background:#eab308">🟡</div>
-          <div class="stk-size" style="color:#eab308">8×8 cm</div>
-          <div class="stk-label">Linha de saque — 6 pontos</div>
-          <div class="stk-qty">× 6 unidades</div>
-        </div>
-        <div class="stk stk-b" style="grid-column:span 2">
-          <div class="stk-circle" style="background:#3b82f6">🔵</div>
-          <div class="stk-size" style="color:#3b82f6">8×8 cm</div>
-          <div class="stk-label">Centro da rede</div>
-          <div class="stk-qty">× 1 unidade — Total: 11 na quadra, 7 por celular</div>
-        </div>
-      </div>
-      <div class="alert alert-warn" style="margin-top:10px">
-        ⚠ Use adesivos <strong>foscos</strong> (não brilhantes). Cole exatamente sobre as marcações da quadra.
-      </div>
-    </div>
-
-    <div>
-      <div class="gs-title">📱 Instalação por dispositivo</div>
-      <div class="tab-row">
-        <button id="tab-android" class="tab-btn" onclick="setTab('android')" style="background:rgba(200,245,58,.12);color:var(--accent);border-right:1px solid rgba(255,255,255,.1)">🤖 Android</button>
-        <button id="tab-ios" class="tab-btn" onclick="setTab('ios')" style="background:rgba(255,255,255,.04);color:rgba(255,255,255,.5)">🍎 iPhone</button>
-      </div>
-
-      <div id="panel-android" style="display:flex;flex-direction:column;gap:0">
-        <div class="alert alert-warn" style="margin-bottom:12px">📱 <strong>Celular DEITADO (paisagem)</strong> — em pé (retrato) a câmera não alcança os cantos distantes da quadra.</div>
-        <div class="gstep">
-          <div class="gstep-n">1</div>
-          <div><div class="gstep-title">Suporte ACIMA do poste lateral</div>
-          <div class="gstep-body">Suporte/haste fixado acima do topo do poste, segurando o celular na horizontal (paisagem). Custo: R$25–60.</div></div>
-        </div>
-        <div class="gstep">
-          <div class="gstep-n">2</div>
-          <div><div class="gstep-title">Altura: 1,55 m</div>
-          <div class="gstep-body">Meça da lente traseira até o chão. Acima do topo do poste padrão (1,07m) — exige suporte com extensão.</div></div>
-        </div>
-        <div class="gstep">
-          <div class="gstep-n">3</div>
-          <div><div class="gstep-title">Use a câmera ULTRA-WIDE (grande angular)</div>
-          <div class="gstep-body">No app de câmera, selecione a lente 0.5x/ultra-wide antes de abrir o TennisEye — ela tem campo de visão maior, essencial para cobrir o lado oposto da quadra.</div></div>
-        </div>
-        <div class="gstep">
-          <div class="gstep-n">4</div>
-          <div><div class="gstep-title">Ângulo: voltado para a quadra inteira</div>
-          <div class="gstep-body">Aponte na diagonal, cobrindo da linha de fundo do seu lado até o canto mais distante do lado oposto.</div></div>
-        </div>
-        <div class="gstep">
-          <div class="gstep-n">5</div>
-          <div><div class="gstep-title">Offset lateral (se a câmera não fica exatamente no poste)</div>
-          <div class="gstep-body">Meça quantos cm a lente fica deslocada para fora do poste. Ajuste o valor em <code style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px">CAM_OFFSET_M</code> no código se for diferente de 5cm.</div></div>
-        </div>
-        <div class="gstep">
-          <div class="gstep-n">6</div>
-          <div><div class="gstep-title">Selecione Poste A ou B no app</div>
-          <div class="gstep-body">Na tela inicial, escolha em qual poste este celular está. Isso ajusta o cálculo de confiança por zona.</div></div>
-        </div>
-        <div class="gstep">
-          <div class="gstep-n">7</div>
-          <div><div class="gstep-title">Câmera não abre?</div>
-          <div class="gstep-body">Ícone 🔒 na barra → Câmera → Permitir. Ou: Config. Android → Apps → Chrome → Permissões.</div></div>
-        </div>
-      </div>
-
-      <div id="panel-ios" style="display:none;flex-direction:column;gap:0">
-        <div class="alert alert-err" style="margin-bottom:12px">🚫 Use o <strong>Safari</strong>, não o Chrome, no iPhone.</div>
-        <div class="alert alert-warn" style="margin-bottom:12px">📱 Celular <strong>deitado (paisagem)</strong>, câmera ultra-wide selecionada antes de abrir o app.</div>
-        <div class="gstep">
-          <div class="gstep-n">1</div>
-          <div><div class="gstep-title">Abrir no Safari</div>
-          <div class="gstep-body">Cole o link no Safari. Toque em Permitir quando pedir câmera.</div></div>
-        </div>
-        <div class="gstep">
-          <div class="gstep-n">2</div>
-          <div><div class="gstep-title">Mesma instalação física</div>
-          <div class="gstep-body">1,55m de altura, poste lateral, celular deitado, câmera ultra-wide, selecione A ou B na tela inicial.</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div style="height:24px"></div>
+    <div class="gs-section">Montagem física</div>
+    <div class="gs-step"><div class="gs-n">1</div><div class="gs-body">
+      <div class="gs-title">Suporte 3D no topo do poste</div>
+      <div class="gs-sub">Braçadeira impressa em PETG abraça o topo do poste da rede (1,07m). Celular fica centralizado em paisagem, lente a ~1,12m do solo.</div>
+    </div></div>
+    <div class="gs-step"><div class="gs-n">2</div><div class="gs-body">
+      <div class="gs-title">Lente ultra-wide obrigatória</div>
+      <div class="gs-sub">Usar sempre a lente 0.5x (grande angular). FOV 170° — necessário para cobrir a quadra oposta inteira.</div>
+    </div></div>
+    <div class="gs-step"><div class="gs-n">3</div><div class="gs-body">
+      <div class="gs-title">Celular A no poste esquerdo, B no direito</div>
+      <div class="gs-sub">Cada celular julga a metade OPOSTA da quadra — o que ele enxerga à frente.</div>
+    </div></div>
+    <div class="gs-section">Calibração por bolinhas</div>
+    <div class="gs-step"><div class="gs-n">4</div><div class="gs-body">
+      <div class="gs-title">10 bolinhas, confirmação manual uma a uma</div>
+      <div class="gs-sub">Sequência: P2 → P5 → P3 → P6 (saque) → P8 → P10 → PC1 → PC2 (fundo simples) → P12 → P14 (duplas, opcional).</div>
+    </div></div>
+    <div class="gs-step"><div class="gs-n">5</div><div class="gs-body">
+      <div class="gs-title">Toque na bolinha na imagem → Confirmar</div>
+      <div class="gs-sub">Posicione a bolinha no ponto indicado, toque nela na imagem ao vivo, pressione Confirmar. O mapa virtual é construído progressivamente.</div>
+    </div></div>
+    <div class="gs-step"><div class="gs-n">6</div><div class="gs-body">
+      <div class="gs-title">Retire as bolinhas e inicie o jogo</div>
+      <div class="gs-sub">Após confirmar todos os pontos, retire as bolinhas da quadra e toque em Iniciar Jogo. A partir daí, tudo é automático.</div>
+    </div></div>
   </div>
 </div>
-
-<!-- ══ HUD ══ -->
-<div id="hud">
-  <div class="hud-top">
-    <div class="hud-logo">
-      Tennis<span>Eye</span>
-      <span class="post-tag post-tag-a" id="hud-post-tag">A</span>
-    </div>
-    <div id="hud-badge" class="hud-badge hbadge-cal">Calibrar</div>
-  </div>
-  <div id="detect-status">
-    <span class="ds-dot" id="ds-dot"></span>
-    <span id="ds-text">Detecção parada</span>
-  </div>
-  <div id="ball-tracker-dot"></div>
-  <div id="detect-marker"></div>
-  <div class="hud-bot">
-    <div class="info-bar">
-      <div class="idot warn" id="idot"></div>
-      <div class="itext" id="itext">Posicione no poste e toque em Calibrar</div>
-    </div>
-    <div class="hud-btns">
-      <div id="ui-cal">
-        <button class="hbtn hbtn-cal" onclick="startCal()">🎯 Calibrar minha metade (<span id="cal-side-label">esquerda</span>)</button>
-      </div>
-      <div id="ui-play" style="display:none;flex-direction:column;gap:10px">
-        <div class="set-format" id="set-format-wrap">
-          <button class="fmt-btn sel" id="fmt-1" onclick="setMatchFormat(1)">Melhor de 1 set</button>
-          <button class="fmt-btn" id="fmt-3" onclick="setMatchFormat(3)">Melhor de 3 sets</button>
-        </div>
-        <div class="set-counter">
-          <div>
-            <div class="set-counter-label">Sets — A <span id="sets-a">0</span> × <span id="sets-b">0</span> B</div>
-          </div>
-        </div>
-
-        <!-- ANTES de iniciar: só o botão de início -->
-        <div id="pre-game-wrap">
-          <button class="start-game-btn" onclick="startGame()">▶ Iniciar Jogo</button>
-        </div>
-
-        <!-- DEPOIS de iniciar: tudo automático, sem botões de marcação -->
-        <div id="in-game-wrap" style="display:none;flex-direction:column;gap:8px">
-          <div class="auto-phase-indicator" id="auto-phase-indicator">
-            <span class="api-dot" id="api-dot"></span>
-            <span id="api-text">🎾 SAQUE — 1ª tentativa</span>
-          </div>
-          <div class="hbtn-row">
-            <button class="hbtn hbtn-sm" onclick="reCal()">↺ Recalibrar</button>
-            <button class="hbtn hbtn-sm" onclick="stopGame()">⏸ Parar jogo</button>
-          </div>
-          <button class="review-btn" id="review-btn" onclick="openReview()" style="display:none">
-            🔍 Conferir última marcação
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ TELA: CONFERÊNCIA (frame congelado) ══ -->
-<div class="screen off" id="sc-review">
-  <div class="review-header">
-    <div class="review-title" id="review-title">Conferência — FORA</div>
-    <button class="back-btn" onclick="closeReview()">×</button>
-  </div>
-  <div class="review-frame-wrap">
-    <canvas id="review-canvas"></canvas>
-    <div class="review-time-badge" id="review-time-badge">há 2s</div>
-  </div>
-  <div class="review-footer">
-    <div class="review-info-text">Frame capturado no momento exato em que "FORA" foi marcado. Use para conferência visual entre os jogadores.</div>
-    <button class="big-btn btn-guide" style="width:100%" onclick="closeReview()">Fechar conferência</button>
-  </div>
-</div>
-
-<div id="banner">
-  <div class="banner-bg" id="banner-bg"></div>
-  <div class="banner-txt" id="banner-txt">OUT</div>
-</div>
-
-<div id="silent-indicator">
-  <div class="silent-box">
-    <div class="silent-icon">🔇</div>
-    <div class="silent-text">Zona de baixa confiança<br>aguardando câmera do outro poste</div>
-  </div>
-</div>
-
-<div id="toast"></div>
 
 <script>
 'use strict';
 
-/* ══════════════════════════════
-   DETECÇÃO DE PLATAFORMA
-══════════════════════════════ */
-const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-const NEEDS_SAFARI_WARNING = IS_IOS && !IS_SAFARI;
+/* ══ MEDIDAS REAIS ══ */
+const C={L:23.77,Wd:10.97,Ws:8.23,svc:6.40};
+const hl=C.L/2, hwd=C.Wd/2, hws=C.Ws/2;
+const CAM_H=1.12;
 
-/* ══════════════════════════════
-   ESTADO DA POSIÇÃO (A ou B)
-══════════════════════════════ */
-let myPost = 'A'; // 'A' = poste esquerdo, 'B' = poste direito
+/* ══ ESTADO GLOBAL ══ */
+let myPost='A', matchMode='singles', gameRunning=false;
+let currentPhase='serve', serveAttempt=1;
+let calPts=[], calStep=0, calibrated=false;
+let calAnimId=null, detectRAF=null, detectionRunning=false;
+let lastReviewTime=null, lastReviewLabel='';
+let procCanvas=null, procCtx=null;
+const PROC_W=320;
+let ballHistory=[], lastBounceTime=0;
+const HISTORY_MAX=16, BOUNCE_CD=900;
 
-function selectPost(p){
-  myPost = p;
-  document.getElementById('post-a-card').classList.toggle('sel', p==='A');
-  document.getElementById('post-b-card').classList.toggle('sel', p==='B');
-  const tag = document.getElementById('hud-post-tag');
-  tag.textContent = p;
-  tag.className = 'post-tag ' + (p==='A' ? 'post-tag-a' : 'post-tag-b');
-  const calLabel = document.getElementById('cal-side-label');
-  if(calLabel) calLabel.textContent = p==='A' ? 'esquerda' : 'direita';
+/* Sequência de calibração — mesma para A e B (os pontos são os do lado oposto) */
+/* x = posição no comprimento, y = posição na largura */
+function calSequence(){
+  const side = myPost==='A'; // A julga y>hwd, B julga y<hwd
+  const ys = side ? hwd+hws : hwd-hws; // linha de simples do lado julgado
+  const yd = side ? C.Wd : 0;           // linha de duplas do lado julgado
+  const yc = hwd;                        // linha central (compartilhada)
+  return [
+    {key:'P2', label:'P2 — Saque próximo × central',    col:'#eab308', mx:hl-C.svc, my:yc,  grp:'svc'},
+    {key:'P5', label:'P5 — Saque distante × central',   col:'#eab308', mx:hl+C.svc, my:yc,  grp:'svc'},
+    {key:'P3', label:'P3 — Saque próximo × simples',    col:'#eab308', mx:hl-C.svc, my:ys,  grp:'svc'},
+    {key:'P6', label:'P6 — Saque distante × simples',   col:'#eab308', mx:hl+C.svc, my:ys,  grp:'svc'},
+    {key:'P8', label:'P8 — Fundo A × simples',          col:'#ef4444', mx:C.L,      my:ys,  grp:'crt'},
+    {key:'P10',label:'P10 — Fundo B × simples',         col:'#ef4444', mx:0,        my:ys,  grp:'crt'},
+    {key:'PC1',label:'PC1 — Fundo A × central',         col:'#ef4444', mx:C.L,      my:yc,  grp:'crt'},
+    {key:'PC2',label:'PC2 — Fundo B × central',         col:'#ef4444', mx:0,        my:yc,  grp:'crt'},
+    {key:'P12',label:'P12 — Fundo A × duplas',          col:'#a855f7', mx:C.L,      my:yd,  grp:'dup'},
+    {key:'P14',label:'P14 — Fundo B × duplas',          col:'#a855f7', mx:0,        my:yd,  grp:'dup'},
+  ];
 }
+let SEQ=[];
 
-/* ══════════════════════════════
-   MODALIDADE: SIMPLES OU DUPLAS
-   Define qual largura é considerada "dentro da quadra" no rally.
-   Simples usa a linha interna (8,23m); duplas usa a linha externa
-   com corredores (10,97m). Os adesivos vermelhos continuam colados
-   nos cantos de duplas (mais fáceis de ver), mas o app sabe qual
-   linha vale como "fora" de acordo com a modalidade escolhida.
-══════════════════════════════ */
-let matchMode = 'singles'; // 'singles' ou 'doubles'
-
-function selectMatchMode(mode){
-  matchMode = mode;
-  document.getElementById('mode-singles-card').classList.toggle('sel', mode==='singles');
-  document.getElementById('mode-doubles-card').classList.toggle('sel', mode==='doubles');
-}
-
-// Largura efetiva da quadra para fins de "dentro/fora", conforme modalidade
-function effectiveCourtWidth(){
-  return matchMode === 'singles' ? C.Ws : C.Wd;
-}
-// Deslocamento da borda efetiva em relação ao eixo central (para simples,
-// a linha fica recuada pelo tamanho do corredor de cada lado)
-function effectiveCourtBounds(){
-  if(matchMode === 'singles'){
-    return {left: hwd - hws, right: hwd + hws};
-  }
-  return {left: 0, right: C.Wd};
-}
-
-/* ══════════════════════════════
-   UTILITÁRIOS
-══════════════════════════════ */
-let toastTmr;
-function toast(msg,dur=2400){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  clearTimeout(toastTmr);
-  toastTmr=setTimeout(()=>el.classList.remove('show'),dur);
-}
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('off',s.id!==id));
-}
-function hideScore(){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
-}
-function setTab(t){
-  const isA=t==='android';
-  document.getElementById('panel-android').style.display=isA?'flex':'none';
-  document.getElementById('panel-ios').style.display=isA?'none':'flex';
-  const ta=document.getElementById('tab-android'), ti=document.getElementById('tab-ios');
-  if(ta&&ti){
-    ta.style.background=isA?'rgba(200,245,58,.12)':'rgba(255,255,255,.04)';
-    ta.style.color=isA?'var(--accent)':'rgba(255,255,255,.5)';
-    ti.style.background=isA?'rgba(255,255,255,.04)':'rgba(200,245,58,.12)';
-    ti.style.color=isA?'rgba(255,255,255,.5)':'var(--accent)';
-  }
-}
-
-/* ══════════════════════════════
-   SPEECH — iOS FIX
-══════════════════════════════ */
-let voicesLoaded=false, pendingSpeak=null;
-function initSpeech(){
-  if(!window.speechSynthesis) return;
-  const load=()=>{
-    const v=speechSynthesis.getVoices();
-    if(v.length>0){ voicesLoaded=true; if(pendingSpeak){speak(pendingSpeak);pendingSpeak=null;} }
-  };
-  speechSynthesis.onvoiceschanged=load;
-  load();
-}
-function speak(txt){
-  if(!window.speechSynthesis) return;
-  if(IS_IOS){
-    try{ speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
-  }
-  if(!voicesLoaded){pendingSpeak=txt;return;}
-  try{
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(txt);
-    u.lang='en-US';u.volume=1;u.rate=IS_IOS?.9:.85;u.pitch=1;
-    const vs=speechSynthesis.getVoices();
-    const v=vs.find(x=>x.lang==='en-US')||vs.find(x=>x.lang.startsWith('en'));
-    if(v) u.voice=v;
-    setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){}}, IS_IOS?150:60);
-  }catch(e){}
-}
-
-/* ══════════════════════════════
-   CÂMERA
-══════════════════════════════ */
-const video=document.getElementById('video');
-const canvas=document.getElementById('canvas');
+/* ══ NAVEGAÇÃO ══ */
+const video=document.getElementById('cam-video');
+const canvas=document.getElementById('cam-canvas');
 const ctx=canvas.getContext('2d');
 
-function resizeCanvas(){
-  const w=video.videoWidth, h=video.videoHeight;
-  if(w&&h){ canvas.width=w; canvas.height=h; }
-  else{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-}
-
-async function startCamera(){
-  const statusEl=document.getElementById('cam-status');
-  statusEl.textContent='Abrindo câmera...';
-  statusEl.className='alert alert-warn';
-
-  if(NEEDS_SAFARI_WARNING){ showScreen('sc-ios'); return; }
-
-  let constraintsList;
-  if(IS_IOS){
-    constraintsList=[
-      {video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}},
-      {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},
-      {video:{facingMode:'environment'}},
-      {video:true},
-    ];
-  } else {
-    constraintsList=[
-      {video:{facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}}},
-      {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}},
-      {video:{facingMode:'environment'}},
-      {video:true},
-    ];
-  }
-
-  let stream=null, lastErr=null;
-  for(const c of constraintsList){
-    try{ stream=await navigator.mediaDevices.getUserMedia(c); break; }
-    catch(e){ lastErr=e; console.warn('Constraint falhou:',e.name,e.message); }
-  }
-  if(!stream){ showPermError(lastErr); return; }
-
-  video.srcObject=stream;
-  video.onloadedmetadata=async()=>{
-    try{ await video.play(); }
-    catch(e){ document.addEventListener('touchstart',()=>video.play(),{once:true}); }
-    resizeCanvas();
-    window.addEventListener('resize',()=>{ resizeCanvas(); if(calibrated) drawCalibratedCanvas(); });
-    onCameraReady();
-  };
-  video.onerror=()=>showPermError(null);
-}
-
-function onCameraReady(){
+function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
-  document.getElementById('hud').classList.add('active');
-  document.getElementById('cal-bar').style.display='block';
-  drawIdleCanvas();
-  const fps=IS_IOS?'30fps':'30fps';
-  toast(`📷 Câmera ativa (Poste ${myPost}) — toque em Iniciar calibração`);
+  document.getElementById(id).classList.remove('off');
 }
-
-function forceStartCam(){
-  document.getElementById('sc-ios').classList.add('off');
-  startCameraForce();
-}
-async function startCameraForce(){
-  let stream=null;
-  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); }
-  catch(e){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true}); }catch(e2){ showPermError(e2); return; } }
-  video.srcObject=stream;
-  video.onloadedmetadata=async()=>{ try{await video.play();}catch(e){} resizeCanvas(); onCameraReady(); };
-}
-
-function showPermError(err){
-  const icon=document.getElementById('perm-icon'), title=document.getElementById('perm-title');
-  const body=document.getElementById('perm-body'), steps=document.getElementById('perm-steps');
-  icon.textContent='🚫'; title.textContent='Câmera bloqueada';
-  if(IS_IOS){
-    body.textContent='No iPhone, a câmera só funciona no Safari.';
-    steps.innerHTML=`
-      <div class="perm-step">1. Abra o link no <strong>Safari</strong></div>
-      <div class="perm-step">2. Ajustes → Safari → Câmera → Permitir</div>
-      <div class="perm-step">3. Recarregue e tente novamente</div>`;
-  } else {
-    const msg=err?err.message:'Permissão negada';
-    body.textContent=`Erro: ${msg}`;
-    steps.innerHTML=`
-      <div class="perm-step">1. Ícone 🔒 na barra → Câmera → Permitir</div>
-      <div class="perm-step">2. Ou: Config. Android → Apps → Chrome → Permissões</div>
-      <div class="perm-step">3. Recarregue esta página</div>`;
-  }
-  showScreen('sc-perm');
-}
-
-/* ══════════════════════════════
-   GEOMETRIA — CÂMERA INVERTIDA + MARGEM DE COMPENSAÇÃO
-   IMPORTANTE: a câmera no poste central da rede (y=hl) NÃO consegue
-   ver os cantos do PRÓPRIO lado — ficariam a 90° (fora de qualquer FOV).
-   Por isso, cada celular julga o lado OPOSTO da quadra, onde o ângulo
-   necessário é de ~95° (dentro do alcance de uma lente ultra grande angular).
-
-   ATUALIZADO após teste em quadra:
-   - Celular em PAISAGEM (deitado), não retrato — em retrato o FOV
-     horizontal usa o lado curto do sensor (~45°), insuficiente.
-     Em paisagem com câmera ULTRA-WIDE, o FOV horizontal sobe a ~116°.
-   - Altura subiu de 1,05m para 1,55m (suporte acima do poste).
-   - Câmera fica com offset lateral (alguns cm para FORA da quadra,
-     em relação ao poste) — configurável abaixo, ajustar conforme medição.
-══════════════════════════════ */
-const C = {L:23.77, Ws:8.23, Wd:10.97, svc:6.40};
-const hl=C.L/2, hwd=C.Wd/2, hws=C.Ws/2;
-const CAM_H = 1.55;              // altura do suporte acima do poste
-const RES_V = 1080;
-const FOV_V_DEG = 84;             // vertical, ultra-wide em paisagem
-const FOV_H_DEG = 116;            // horizontal, ultra-wide em paisagem
-const CAM_OFFSET_M = 0.05;        // offset lateral medido em campo (~5cm para fora da quadra) — ajustar aqui
-
-// Posição real da câmera (poste do próprio lado + offset lateral para fora)
-function myCamPos(){
-  return myPost==='A'
-    ? {x: -CAM_OFFSET_M, y: hl}
-    : {x: C.Wd + CAM_OFFSET_M, y: hl};
-}
-
-// Responsabilidade INVERTIDA: cada celular julga o lado OPOSTO
-function isMyResponsibility(px){
-  return myPost==='A' ? (px > hwd) : (px <= hwd);
-}
-
-function errorCmAt(px, py){
-  const cam = myCamPos();
-  const dx = px - cam.x, dy = py - cam.y;
-  let distH = Math.sqrt(dx*dx + dy*dy);
-  if(distH < 0.05) distH = 0.05;
-  const dist3d = Math.sqrt(distH*distH + CAM_H*CAM_H);
-  const elev = Math.atan2(CAM_H, distH);
-  const fovV = FOV_V_DEG * Math.PI/180;
-  return (dist3d * fovV / RES_V) * 100 / Math.max(Math.sin(elev), 0.05);
-}
-
-// Distância (em cm) da posição até a linha mais próxima da quadra
-function distToNearestLineCm(px, py){
-  const linesX = [hwd-hws, hwd, hwd+hws, 0, C.Wd];
-  const linesY = [0, hl-C.svc, hl, hl+C.svc, C.L];
-  const dx = Math.min(...linesX.map(lx=>Math.abs(px-lx)));
-  const dy = Math.min(...linesY.map(ly=>Math.abs(py-ly)));
-  return Math.min(dx, dy) * 100;
-}
-
-// Fator de margem de segurança: erro estimado × 1.5
-const MARGIN_FACTOR = 1.5;
-
-// Avalia confiança da decisão numa posição: 'confiavel' ou 'incerto'
-function evaluateConfidence(px, py){
-  const err = errorCmAt(px, py);
-  const margin = err * MARGIN_FACTOR;
-  const distLine = distToNearestLineCm(px, py);
-  const isUncertain = distLine <= margin;
-  return {err: err.toFixed(1), margin: margin.toFixed(1), distLine: distLine.toFixed(1), isUncertain};
-}
-
-/* ══════════════════════════════
-   CALIBRAÇÃO
-══════════════════════════════ */
-function seqForPost(post){
-  // IMPORTANTE: a câmera vê bem o lado OPOSTO (dentro do FOV de 110°).
-  // Os pontos do PRÓPRIO lado ficam fora do alcance (a 90°, atrás da câmera).
-  // Por isso cada celular calibra os pontos do lado QUE ELE ENXERGA: o oposto.
-  const allPts = [
-    {key:'corner_TL', label:'Canto Superior Esquerdo', color:'#ef4444', mx:0, my:0},
-    {key:'corner_TR', label:'Canto Superior Direito', color:'#ef4444', mx:C.Wd, my:0},
-    {key:'corner_BL', label:'Canto Inferior Esquerdo', color:'#ef4444', mx:0, my:C.L},
-    {key:'corner_BR', label:'Canto Inferior Direito', color:'#ef4444', mx:C.Wd, my:C.L},
-    {key:'svc_TL', label:'Saque Superior Esquerdo', color:'#eab308', mx:hwd-hws, my:hl-C.svc},
-    {key:'svc_TC', label:'Saque Superior Centro', color:'#eab308', mx:hwd, my:hl-C.svc},
-    {key:'svc_TR', label:'Saque Superior Direito', color:'#eab308', mx:hwd+hws, my:hl-C.svc},
-    {key:'svc_BL', label:'Saque Inferior Esquerdo', color:'#eab308', mx:hwd-hws, my:hl+C.svc},
-    {key:'svc_BC', label:'Saque Inferior Centro', color:'#eab308', mx:hwd, my:hl+C.svc},
-    {key:'svc_BR', label:'Saque Inferior Direito', color:'#eab308', mx:hwd+hws, my:hl+C.svc},
-    {key:'net_center', label:'Centro da Rede', color:'#3b82f6', mx:hwd, my:hl},
-  ];
-  // Poste A enxerga e calibra o lado DIREITO (oposto); Poste B enxerga o ESQUERDO
-  const filtered = allPts.filter(p => {
-    if(post==='A') return p.mx >= hwd - 0.01;
-    return p.mx <= hwd + 0.01;
-  });
-  return filtered.map((p,i)=>({...p, hint: p.label}));
-}
-
-let SEQ = seqForPost('A');
-let calStep=0, calPts=[], calibrated=false, calAnimId=null;
-
-function drawIdleCanvas(){
-  const W=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-  ctx.strokeStyle='rgba(200,245,58,0.07)';ctx.lineWidth=1;
-  for(let x=0;x<W;x+=W/6){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<H;y+=H/8){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  ctx.strokeStyle='rgba(200,245,58,0.3)';ctx.lineWidth=1.5;ctx.setLineDash([6,6]);
-  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle='rgba(200,245,58,0.65)';ctx.font='bold 13px system-ui';ctx.textAlign='center';
-  ctx.fillText(`↑ QUADRA (Poste ${myPost}) ↑`,W/2,H/2-12);
-  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='11px system-ui';
-  ctx.fillText('Aponte na diagonal e calibre',W/2,H/2+12);
-}
-
-function drawCalCanvas(){
-  const W=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-  calPts.forEach((p,i)=>{
-    ctx.beginPath();ctx.arc(p.px,p.py,20,0,Math.PI*2);
-    ctx.fillStyle=SEQ[i].color+'44';ctx.fill();
-    ctx.beginPath();ctx.arc(p.px,p.py,14,0,Math.PI*2);
-    ctx.fillStyle=SEQ[i].color;ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#000';ctx.font='bold 13px system-ui';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(String(i+1),p.px,p.py);ctx.textBaseline='alphabetic';
-  });
-  if(calStep<SEQ.length){
-    const cur=SEQ[calStep];
-    const bw=Math.min(W-32,340),bx=(W-bw)/2,by=H*0.08;
-    ctx.fillStyle='rgba(0,0,0,0.82)';
-    ctx.beginPath();
-    if(ctx.roundRect) ctx.roundRect(bx,by,bw,64,12);
-    else ctx.rect(bx,by,bw,64);
-    ctx.fill();
-    ctx.strokeStyle=cur.color+'bb';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='11px system-ui';ctx.textAlign='center';
-    ctx.fillText(`Passo ${calStep+1} de ${SEQ.length}`,W/2,by+18);
-    ctx.fillStyle=cur.color;ctx.font='bold 16px system-ui';
-    ctx.fillText(`Toque (${calStep+1}): ${cur.label}`,W/2,by+42);
-
-    const tx=W/2,ty=H*0.58;
-    const pulse=1+Math.sin(Date.now()/550)*0.14;
-    ctx.beginPath();ctx.arc(tx,ty,36*pulse,0,Math.PI*2);
-    ctx.strokeStyle=cur.color+'44';ctx.lineWidth=2;ctx.stroke();
-    ctx.beginPath();ctx.arc(tx,ty,26,0,Math.PI*2);
-    ctx.strokeStyle=cur.color+'88';ctx.lineWidth=1.5;
-    ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
-    ctx.beginPath();ctx.arc(tx,ty,16,0,Math.PI*2);
-    ctx.fillStyle=cur.color;ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(String(calStep+1),tx,ty);ctx.textBaseline='alphabetic';
-
-    ctx.fillStyle='rgba(255,255,255,0.45)';ctx.font='12px system-ui';ctx.textAlign='center';
-    ctx.fillText(`Toque no adesivo nº ${calStep+1} no chão da quadra`,W/2,H*0.76);
-  }
-}
-
-function drawCalibratedCanvas(){
-  const W=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-  const pts={};calPts.forEach(p=>{pts[p.key]={x:p.px,y:p.py};});
-  ctx.strokeStyle='rgba(200,245,58,0.4)';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);
-  ctx.setLineDash([]);
-  calPts.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.px,p.py,5,0,Math.PI*2);ctx.fillStyle=SEQ[i].color;ctx.fill();});
-
-  // Indicador visual de zona de baixa confiança (canto distante)
-  const farPt = calPts.find(p=>p.key==='far_corner2') || calPts.find(p=>p.key==='far_corner1');
-  if(farPt){
-    ctx.beginPath();ctx.arc(farPt.px,farPt.py,30,0,Math.PI*2);
-    ctx.strokeStyle='rgba(239,68,68,0.3)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
-    ctx.stroke();ctx.setLineDash([]);
-  }
-}
-
-function startCal(){
-  SEQ = seqForPost(myPost);
-  calStep=0;calPts=[];calibrated=false;
-  document.getElementById('ui-cal').style.display='';
-  document.getElementById('ui-play').style.display='none';
-  updateBadge('Calibrar','hbadge-cal');
-  setInfo('warn',`Toque (1): ${SEQ[0].label}`);
-  canvas.classList.add('cal-active');
-  if(IS_IOS){ canvas.addEventListener('touchend',onCalTapIOS,{passive:false}); }
-  else { canvas.addEventListener('touchstart',onCalTap,{passive:false}); }
-  canvas.addEventListener('click',onCalClick);
-  updateCalBar();
-  if(calAnimId) cancelAnimationFrame(calAnimId);
-  calAnimId=requestAnimationFrame(calLoop);
-  toast(`Calibrando Poste ${myPost} — toque em cada adesivo`);
-}
-function calLoop(){drawCalCanvas();calAnimId=requestAnimationFrame(calLoop);}
-function onCalTap(e){ e.preventDefault(); const t=e.touches[0]; tapXY(t.clientX,t.clientY); }
-function onCalTapIOS(e){ e.preventDefault(); const t=e.changedTouches[0]; tapXY(t.clientX,t.clientY); }
-function onCalClick(e){tapXY(e.clientX,e.clientY);}
-
-function tapXY(cx2,cy2){
-  if(calStep>=SEQ.length) return;
-  const r=canvas.getBoundingClientRect();
-  const sx=canvas.width/r.width,sy=canvas.height/r.height;
-  const x=(cx2-r.left)*sx,y=(cy2-r.top)*sy;
-  const cur=SEQ[calStep];
-  calPts.push({key:cur.key,px:x,py:y,mx:cur.mx,my:cur.my});
-  calStep++;
-  speak('Ok');
-  toast(`✓ Ponto (${calStep}): ${cur.label} confirmado`);
-  updateCalBar();
-  if(calStep>=SEQ.length){ finishCal(); }
-  else{
-    setInfo('warn',`Toque (${calStep+1}): ${SEQ[calStep].label}`);
-    updateBadge(`Cal ${calStep+1}/${SEQ.length}`,'hbadge-cal');
-  }
-}
-function updateCalBar(){ document.getElementById('cal-fill').style.width=((calStep/SEQ.length)*100)+'%'; }
-
-function finishCal(){
-  cancelAnimationFrame(calAnimId);
-  canvas.classList.remove('cal-active');
-  canvas.removeEventListener('touchstart',onCalTap);
-  canvas.removeEventListener('touchend',onCalTapIOS);
-  canvas.removeEventListener('click',onCalClick);
-  calibrated=true;
-  drawCalibratedCanvas();
-  document.getElementById('ui-cal').style.display='none';
-  document.getElementById('ui-play').style.display='flex';
-  document.getElementById('pre-game-wrap').style.display='block';
-  document.getElementById('in-game-wrap').style.display='none';
-  document.getElementById('cal-bar').style.display='none';
-  updateBadge('Pronto','hbadge-cal');
-  setInfo('ok',`Calibrado (Poste ${myPost}). Toque em Iniciar Jogo quando os dois celulares estiverem prontos.`);
-  speak('Calibração completa.');
-  toast(`🎯 Calibrado! Poste ${myPost} pronto.`);
-}
-
-function startGame(){
-  document.getElementById('pre-game-wrap').style.display='none';
-  document.getElementById('in-game-wrap').style.display='flex';
-  gameRunning = true;
-  resetToServe();
-  speak('Jogo iniciado. Pode sacar!');
-  toast('▶ Jogo iniciado — marcação automática ativa');
-  startBallDetection();
-}
-
-function stopGame(){
-  gameRunning = false;
-  stopBallDetection();
-  document.getElementById('pre-game-wrap').style.display='block';
-  document.getElementById('in-game-wrap').style.display='none';
-  updateBadge('Pronto','hbadge-cal');
-  setInfo('ok','Jogo parado. Toque em Iniciar Jogo para retomar.');
-  toast('⏸ Jogo parado');
-}
-
-function reCal(){
-  gameRunning = false;
-  stopBallDetection();
-  if(calAnimId) cancelAnimationFrame(calAnimId);
-  calStep=0;calPts=[];calibrated=false;
-  document.getElementById('cal-bar').style.display='block';
-  document.getElementById('ui-play').style.display='none';
-  document.getElementById('ui-cal').style.display='';
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawIdleCanvas();
-  updateBadge('Calibrar','hbadge-cal');
-  setInfo('warn','Toque em Iniciar calibração');
-  toast('Calibração reiniciada');
-}
-
-/* ══════════════════════════════
-   FORMATO DA PARTIDA — melhor de 1 ou 3 sets
-   Contador simples e manual (sem placar detalhado de pontos/games)
-══════════════════════════════ */
-let matchFormat = 1; // 1 ou 3
-let setsWon = {A:0, B:0};
-
-function setMatchFormat(n){
-  matchFormat = n;
-  document.getElementById('fmt-1').classList.toggle('sel', n===1);
-  document.getElementById('fmt-3').classList.toggle('sel', n===3);
-  setsWon = {A:0, B:0};
-  updateSetCounter();
-  toast(n===1 ? 'Formato: melhor de 1 set' : 'Formato: melhor de 3 sets');
-}
-
-function winSet(player){
-  setsWon[player]++;
-  updateSetCounter();
-  const needed = matchFormat===1 ? 1 : 2;
-  if(setsWon[player] >= needed){
-    speak(`Player ${player} wins the match`);
-    toast(`🏆 Jogador ${player} venceu a partida! (${setsWon.A}×${setsWon.B})`, 3500);
-  } else {
-    toast(`Set para Jogador ${player} (${setsWon.A}×${setsWon.B})`);
-  }
-}
-
-function updateSetCounter(){
-  document.getElementById('sets-a').textContent = setsWon.A;
-  document.getElementById('sets-b').textContent = setsWon.B;
-}
-
-/* ══════════════════════════════
-   DETECÇÃO AUTOMÁTICA DA BOLA
-   Rastreia a bola amarela por filtro de cor (HSV) frame a frame.
-   Quando a bola para de descer (bounce), verifica a posição
-   estimada contra a zona válida (caixa de saque ou quadra inteira)
-   e dispara OUT (vermelho + som) ou IN (verde, sem som) automaticamente.
-══════════════════════════════ */
-let detectionRunning = false;
-let detectRAF = null;
-let procCanvas = null, procCtx = null;
-const PROC_W = 240; // resolução reduzida para processamento rápido
-
-// Histórico de posições recentes da bola (para detectar trajetória/bounce)
-let ballHistory = []; // [{x,y,t}], coordenadas em px do canvas de processamento
-const HISTORY_MAX = 12;
-let lastBounceTime = 0;
-const BOUNCE_COOLDOWN_MS = 900; // evita múltiplas detecções do mesmo bounce
-
-// Calibração de cor da bola de tênis em HSV (amarelo-fluorescente)
-// H: 45-75 (amarelo-verde), S: alta, V: alta
-function isBallColor(r, g, b){
-  // Conversão RGB->HSV simplificada, focada em range de amarelo de bola de tênis
-  const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  const delta = max - min;
-  if(max < 90) return false; // muito escuro
-  if(delta < 25) return false; // pouco saturado (cinza)
-  let h;
-  if(max === r) h = 60 * (((g-b)/delta) % 6);
-  else if(max === g) h = 60 * ((b-r)/delta + 2);
-  else h = 60 * ((r-g)/delta + 4);
-  if(h < 0) h += 360;
-  const s = delta / max;
-  const v = max / 255;
-  return h >= 40 && h <= 80 && s > 0.35 && v > 0.4;
-}
-
-function findBallBlob(imgData, w, h){
-  const data = imgData.data;
-  let sumX=0, sumY=0, count=0;
-  let minX=w, maxX=0, minY=h, maxY=0;
-  // varredura com passo 2 para velocidade
-  for(let y=0; y<h; y+=2){
-    for(let x=0; x<w; x+=2){
-      const i = (y*w+x)*4;
-      if(isBallColor(data[i], data[i+1], data[i+2])){
-        sumX += x; sumY += y; count++;
-        if(x<minX)minX=x; if(x>maxX)maxX=x;
-        if(y<minY)minY=y; if(y>maxY)maxY=y;
-      }
-    }
-  }
-  if(count < 4) return null; // blob muito pequeno, provavelmente ruído
-  const blobW = maxX-minX, blobH = maxY-minY;
-  if(blobW > w*0.4 || blobH > h*0.4) return null; // blob grande demais, não é a bola
-  return {x: sumX/count, y: sumY/count, size: count};
-}
-
-function startBallDetection(){
-  if(!procCanvas){
-    procCanvas = document.createElement('canvas');
-    procCtx = procCanvas.getContext('2d', {willReadFrequently:true});
-  }
-  ballHistory = [];
-  detectionRunning = true;
-  document.getElementById('ds-dot').classList.add('active');
-  document.getElementById('ds-text').textContent = 'Detectando bola';
-  detectLoop();
-}
-
-function stopBallDetection(){
-  detectionRunning = false;
-  if(detectRAF) cancelAnimationFrame(detectRAF);
-  document.getElementById('ds-dot').classList.remove('active');
-  document.getElementById('ds-text').textContent = 'Detecção parada';
-  document.getElementById('ball-tracker-dot').classList.remove('show');
-}
-
-function detectLoop(){
-  if(!detectionRunning) return;
-  detectRAF = requestAnimationFrame(detectLoop);
-  if(video.readyState < 2 || !video.videoWidth) return;
-
-  const w = PROC_W;
-  const h = Math.round(PROC_W * (video.videoHeight/video.videoWidth));
-  if(procCanvas.width !== w || procCanvas.height !== h){
-    procCanvas.width = w; procCanvas.height = h;
-  }
-  procCtx.drawImage(video, 0, 0, w, h);
-  let imgData;
-  try{ imgData = procCtx.getImageData(0,0,w,h); }
-  catch(e){ return; }
-
-  const blob = findBallBlob(imgData, w, h);
-  const now = Date.now();
-
-  if(blob){
-    // Mostra o ponto de rastreamento na tela (escalado para o tamanho real do vídeo)
-    const scaleX = video.clientWidth / w;
-    const scaleY = video.clientHeight / h;
-    const dot = document.getElementById('ball-tracker-dot');
-    dot.style.left = (blob.x*scaleX)+'px';
-    dot.style.top = (blob.y*scaleY)+'px';
-    dot.classList.add('show');
-
-    ballHistory.push({x:blob.x, y:blob.y, t:now});
-    if(ballHistory.length > HISTORY_MAX) ballHistory.shift();
-
-    checkForBounce();
-  } else {
-    document.getElementById('ball-tracker-dot').classList.remove('show');
-    // Se perdeu a bola por um tempo, limpa histórico parcial (evita falso bounce)
-    if(ballHistory.length && now - ballHistory[ballHistory.length-1].t > 400){
-      ballHistory = [];
-    }
-  }
-}
-
-// Detecta bounce: a bola estava descendo (y aumentando) e mudou para subir
-// ou parou de descer abruptamente — indica que tocou o chão
-function checkForBounce(){
-  if(ballHistory.length < 5) return;
-  const now = Date.now();
-  if(now - lastBounceTime < BOUNCE_COOLDOWN_MS) return;
-
-  const n = ballHistory.length;
-  const recent = ballHistory.slice(n-5);
-  // velocidade vertical entre os últimos pontos
-  const vBefore = recent[2].y - recent[0].y; // tendência descendo (positivo) ou subindo
-  const vAfter = recent[4].y - recent[2].y;
-
-  // Bounce: estava descendo consistentemente (vBefore > limiar) e
-  // a velocidade reduziu/inverteu bruscamente (vAfter << vBefore)
-  const wasDescending = vBefore > 3;
-  const suddenChange = (vAfter - vBefore) < -4 || (wasDescending && vAfter < 1);
-
-  if(wasDescending && suddenChange){
-    lastBounceTime = now;
-    const bouncePoint = recent[3]; // ponto aproximado do toque
-    processBallBounce(bouncePoint);
-    ballHistory = []; // reseta para não re-detectar o mesmo bounce
-  }
-}
-
-// Converte posição em px do canvas de processamento para coordenadas
-// reais da quadra (metros), usando interpolação bilinear a partir
-// dos pontos calibrados mais próximos (mesma lógica de metersToPx invertida)
-function pxToCourtMeters(px, py){
-  if(!calibrated || calPts.length < 4) return null;
-  // Reescala da resolução de processamento para a resolução do canvas principal
-  const scaleX = canvas.width / PROC_W;
-  const scaleY = canvas.height / (PROC_W * (video.videoHeight/video.videoWidth));
-  const fullX = px*scaleX, fullY = py*scaleY;
-
-  // Encontra os 2 pontos calibrados mais próximos para interpolação simples
-  // (aproximação: usa o ponto calibrado mais próximo em distância 2D)
-  let best=null, bestD=Infinity;
-  calPts.forEach(p=>{
-    const d = Math.hypot(p.px-fullX, p.py-fullY);
-    if(d<bestD){bestD=d; best=p;}
-  });
-  if(!best) return null;
-
-  // Aproximação linear local: desloca a partir do ponto mais próximo,
-  // escalando pelo zoom médio da quadra calibrada (pixels por metro)
-  if(calPts.length>=2){
-    const p2 = calPts.reduce((acc,p)=>{
-      const d = Math.hypot(p.px-best.px, p.py-best.py);
-      if(p!==best && d>acc.d) return {p,d};
-      return acc;
-    }, {p:null,d:0}).p || calPts[0];
-    const dPx = Math.hypot(p2.px-best.px, p2.py-best.py) || 1;
-    const dM = Math.hypot(p2.mx-best.mx, p2.my-best.my) || 1;
-    const scale = dM/dPx; // metros por pixel aproximado
-    const dx = (fullX-best.px)*scale;
-    const dy = (fullY-best.py)*scale;
-    return {x: best.mx+dx, y: best.my+dy};
-  }
-  return {x:best.mx, y:best.my};
-}
-
-function processBallBounce(point){
-  if(!gameRunning) return; // só processa lances após "Iniciar Jogo"
-  const courtPos = pxToCourtMeters(point.x, point.y);
-  if(!courtPos) return;
-
-  // Verifica responsabilidade (lado oposto que este celular julga)
-  if(!isMyResponsibility(courtPos.x)){
-    return; // silencioso, fora da minha responsabilidade
-  }
-
-  // Define zona válida conforme fase atual
-  const bounds = effectiveCourtBounds();
-  const inCourt = courtPos.x >= bounds.left && courtPos.x <= bounds.right && courtPos.y >= 0 && courtPos.y <= C.L;
-  let isValid;
-  if(currentPhase === 'serve'){
-    // Caixa de saque: metade da largura (lado do servidor) x profundidade até a linha de saque
-    const svcLeft = hwd - hws, svcRight = hwd + hws;
-    const svcTop = hl - C.svc, svcBottom = hl + C.svc;
-    isValid = courtPos.x >= svcLeft && courtPos.x <= svcRight &&
-              ((courtPos.y >= svcTop && courtPos.y <= hl) || (courtPos.y >= hl && courtPos.y <= svcBottom));
-  } else {
-    isValid = inCourt;
-  }
-
-  // Posição de tela para o marcador visual
-  const scaleX = video.clientWidth / PROC_W;
-  const scaleY = video.clientHeight / (PROC_W * (video.videoHeight/video.videoWidth));
-  const screenX = point.x*scaleX, screenY = point.y*scaleY;
-
-  if(isValid){
-    showDetectMarker(screenX, screenY, 'in');
-    if(currentPhase === 'serve'){
-      // Saque entrou: transição automática para RALLY
-      currentPhase = 'rally';
-      updatePhaseIndicator();
-      toast('🟢 Auto: Saque dentro — rally em andamento');
-    }
-    // Durante rally, IN apenas sinaliza visualmente — ponto continua em jogo
-  } else {
-    showDetectMarker(screenX, screenY, 'out');
-    captureReviewFrame(currentPhase==='serve' ? 'OUT no saque (auto)' : 'OUT na quadra (auto)');
-    speak('Out');
-    if(currentPhase==='serve'){
-      if(serveAttempt===1){
-        serveAttempt=2; updatePhaseIndicator();
-        toast('🔴 Auto: Falta — 2º saque');
-      } else {
-        toast('🔴 Auto: Dupla falta — fim do ponto');
-        resetToServe();
-      }
-    } else {
-      toast('🔴 Auto: OUT — fim do ponto');
-      resetToServe();
-    }
-  }
-}
-
-function showDetectMarker(x, y, type){
-  const m = document.getElementById('detect-marker');
-  m.style.left = x+'px';
-  m.style.top = y+'px';
-  m.className = 'show ' + type;
-  const dur = type==='in' ? 3000 : 1600;
-  clearTimeout(m._hideTimer);
-  m._hideTimer = setTimeout(()=>{ m.classList.remove('show'); }, dur);
-}
-
-/* ══════════════════════════════
-   JOGO — MÁQUINA DE ESTADOS AUTOMÁTICA
-   Sem placar sincronizado entre celulares. O sistema alterna
-   sozinho entre SAQUE (valida caixa de saque) e RALLY (valida
-   quadra inteira) com base no resultado de cada marcação:
-   - 1º saque fora → 2ª tentativa (ainda SAQUE)
-   - 2º saque fora → fim do ponto, volta para 1º saque
-   - Saque dentro → muda para RALLY até a bola sair
-   - LET → reseta para 1º saque sem penalizar (toque na rede)
-══════════════════════════════ */
-let currentPhase = 'serve'; // 'serve' ou 'rally' — controlado AUTOMATICAMENTE
-let gameRunning = false; // só processa bounces após "Iniciar Jogo"
-let serveAttempt = 1; // 1 ou 2
-
-function updatePhaseIndicator(){
-  const ind = document.getElementById('auto-phase-indicator');
-  const txt = document.getElementById('api-text');
-  const serveRow = document.getElementById('serve-in-row');
-  if(currentPhase==='serve'){
-    ind.classList.remove('rally');
-    txt.textContent = `🎾 SAQUE — ${serveAttempt}ª tentativa`;
-    updateBadge(serveAttempt===1 ? '1º saque' : '2º saque', serveAttempt===1?'hbadge-serve':'hbadge-fault');
-    if(serveRow) serveRow.style.display = 'grid';
-  } else {
-    ind.classList.add('rally');
-    txt.textContent = '🏃 JOGO — quadra inteira';
-    updateBadge('Em jogo','hbadge-rally');
-    if(serveRow) serveRow.style.display = 'none';
-  }
-}
-
-function resetToServe(){
-  currentPhase = 'serve';
-  serveAttempt = 1;
-  updatePhaseIndicator();
-  setInfo('ok','Próximo ponto — validando caixa de saque.');
-}
-
-/* ── Captura de frame para conferência ── */
-let lastReviewFrame = null;
-let lastReviewLabel = '';
-let lastReviewTime = null;
-
-function captureReviewFrame(label){
-  const reviewCanvas = document.getElementById('review-canvas');
-  reviewCanvas.width = canvas.width;
-  reviewCanvas.height = canvas.height;
-  const rctx = reviewCanvas.getContext('2d');
-  rctx.drawImage(video, 0, 0, reviewCanvas.width, reviewCanvas.height);
-  // Desenha também o overlay da quadra calibrada por cima, se existir
-  if(calibrated){
-    rctx.drawImage(canvas, 0, 0);
-  }
-  lastReviewFrame = true;
-  lastReviewLabel = label;
-  lastReviewTime = Date.now();
-  document.getElementById('review-btn').style.display = 'block';
-}
-
-function openReview(){
-  if(!lastReviewFrame) return;
-  document.getElementById('review-title').textContent = `Conferência — ${lastReviewLabel}`;
-  const secsAgo = Math.round((Date.now()-lastReviewTime)/1000);
-  document.getElementById('review-time-badge').textContent = secsAgo<=1 ? 'agora mesmo' : `há ${secsAgo}s`;
-  showScreen('sc-review');
-}
-function closeReview(){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
-}
-
-function showSilentIndicator(){
-  const el = document.getElementById('silent-indicator');
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 1600);
-}
-function showBanner(txt,bg){
-  const b=document.getElementById('banner'),t=document.getElementById('banner-txt'),bg2=document.getElementById('banner-bg');
-  t.textContent=txt;
-  if(txt==='OUT') t.style.textShadow='0 0 60px #ef4444,0 4px 24px rgba(0,0,0,.6)';
-  else if(txt==='LET') t.style.textShadow='0 0 60px #3b82f6,0 4px 24px rgba(0,0,0,.6)';
-  else t.style.textShadow='0 0 60px #22c55e,0 4px 24px rgba(0,0,0,.6)';
-  bg2.style.background=bg;b.classList.add('show');
-  setTimeout(()=>b.classList.remove('show'),1400);
-}
-function setInfo(dot,txt){
-  document.getElementById('idot').className='idot '+dot;
+function setInfo(type,txt){
+  document.getElementById('idot').className='idot '+type;
   document.getElementById('itext').textContent=txt;
 }
 function updateBadge(txt,cls){
-  const b=document.getElementById('hud-badge');b.textContent=txt;b.className='hud-badge '+cls;
+  const b=document.getElementById('hud-badge');
+  b.textContent=txt; b.className='hud-badge '+cls;
+}
+function toast(msg,dur=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+function speak(txt){
+  try{
+    const u=new SpeechSynthesisUtterance(txt);
+    u.lang='en-US'; u.volume=1; u.rate=1.1;
+    setTimeout(()=>speechSynthesis.speak(u),80);
+  }catch(e){}
+}
+function showBanner(txt,col){
+  const b=document.getElementById('banner');
+  const t=document.getElementById('banner-txt');
+  t.textContent=txt;
+  t.style.color=col||'white';
+  t.style.textShadow=`0 0 60px ${col||'white'}88`;
+  b.classList.add('show');
+  clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('show'),1400);
 }
 
-/* ══════════════════════════════
-   INIT
-══════════════════════════════ */
-window.addEventListener('load',()=>{
-  initSpeech();
-  selectPost('A');
+/* ══ HOME ══ */
+function selectPost(p){
+  myPost=p;
+  document.getElementById('post-a-card').classList.toggle('sel',p==='A');
+  document.getElementById('post-b-card').classList.toggle('sel',p==='B');
+  const tag=document.getElementById('hud-tag');
+  tag.textContent=p;
+  tag.className='post-tag '+(p==='A'?'post-tag-a':'post-tag-b');
+}
+function selectMode(m){
+  matchMode=m;
+  document.getElementById('mode-singles').classList.toggle('sel',m==='singles');
+  document.getElementById('mode-doubles').classList.toggle('sel',m==='doubles');
+}
 
-  const statusEl=document.getElementById('cam-status');
-  const btnCam=document.getElementById('btn-cam');
+/* ══ CÂMERA ══ */
+const IS_IOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const IS_SAFARI=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-  if(IS_IOS && !IS_SAFARI){
-    statusEl.innerHTML='🚫 <strong>iPhone detectado.</strong> Use o <strong>Safari</strong> para a câmera.';
-    statusEl.className='alert alert-err';
-    btnCam.textContent='Abrir no Safari (instruções)';
-    btnCam.onclick=()=>showScreen('sc-ios');
-    btnCam.disabled=false;
-    setTab('ios');
-  } else if(IS_IOS && IS_SAFARI){
-    statusEl.innerHTML='✓ Safari detectado — câmera disponível.';
-    statusEl.className='alert alert-ok';
-    btnCam.disabled=false; btnCam.onclick=startCamera;
-    setTab('ios');
-  } else if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    statusEl.textContent='⚠ Câmera não detectada. Tente no Chrome.';
-    statusEl.className='alert alert-warn';
-    btnCam.disabled=false; btnCam.onclick=startCamera;
-  } else {
-    statusEl.textContent='✓ Câmera disponível — toque em Abrir câmera';
-    statusEl.className='alert alert-ok';
-    btnCam.disabled=false; btnCam.onclick=startCamera;
+async function checkCam(){
+  try{
+    const devs=await navigator.mediaDevices.enumerateDevices();
+    const hasCam=devs.some(d=>d.kind==='videoinput');
+    const el=document.getElementById('cam-status');
+    const btn=document.getElementById('btn-open-cam');
+    if(IS_IOS&&!IS_SAFARI){
+      el.className='alert alert-err';
+      el.textContent='⚠ No iPhone, use o Safari (não Chrome/Firefox)';
+    } else if(hasCam){
+      el.className='alert alert-ok';
+      el.textContent='✓ Câmera detectada — pronto para calibrar';
+      btn.disabled=false;
+    } else {
+      el.className='alert alert-warn';
+      el.textContent='⚠ Câmera não encontrada';
+    }
+  }catch(e){
+    document.getElementById('cam-status').textContent='⚠ '+e.message;
   }
-});
+}
+checkCam();
+
+async function openCamera(){
+  showScreen('cam-screen');
+  const constraints={
+    video:{
+      facingMode:{exact:'environment'},
+      width:{ideal:1920}, height:{ideal:1080},
+      frameRate:{ideal:30}
+    }
+  };
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject=stream;
+    await new Promise(r=>{video.onloadedmetadata=r});
+    canvas.width=video.videoWidth||1280;
+    canvas.height=video.videoHeight||720;
+    startCalibration();
+  }catch(e){
+    try{
+      const s2=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      video.srcObject=s2;
+      await new Promise(r=>{video.onloadedmetadata=r});
+      canvas.width=video.videoWidth||1280;
+      canvas.height=video.videoHeight||720;
+      startCalibration();
+    }catch(e2){
+      setInfo('err','Erro ao abrir câmera: '+e2.message);
+    }
+  }
+}
+
+/* ══ CALIBRAÇÃO ══ */
+/* O MAPA VIRTUAL é construído em PIXELS:
+   - Cada ponto calibrado tem posição real (mx,my) em metros E posição em pixels (px,py)
+   - As LINHAS VIRTUAIS ficam em coordenadas de pixel
+   - A bola também é detectada em pixels
+   - Comparação direta: sem conversão pixel→metro → distorção se anula
+*/
+
+function startCalibration(){
+  SEQ=calSequence();
+  if(matchMode==='singles') SEQ=SEQ.filter(p=>p.grp!=='dup');
+  calPts=[]; calStep=0; calibrated=false;
+  document.getElementById('ui-cal').style.display='flex';
+  document.getElementById('ui-pregame').style.display='none';
+  document.getElementById('ui-game').style.display='none';
+  document.getElementById('btn-skip-dup').style.display=
+    matchMode==='doubles'?'block':'none';
+  updateBadge('Calibrar','hbadge-cal');
+  setInfo('warn','Toque na bolinha na imagem para começar');
+  canvas.addEventListener('click',onCanvasTap);
+  canvas.addEventListener('touchend',onCanvasTapTouch,{passive:false});
+  calAnimId=requestAnimationFrame(drawCalFrame);
+}
+
+function onCanvasTapTouch(e){
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  handleTap(t.clientX,t.clientY);
+}
+function onCanvasTap(e){ handleTap(e.clientX,e.clientY); }
+
+let pendingPoint=null; // ponto tocado aguardando confirmação
+function handleTap(cx,cy){
+  if(calStep>=SEQ.length) return;
+  const r=canvas.getBoundingClientRect();
+  const sx=canvas.width/r.width, sy=canvas.height/r.height;
+  const px=(cx-r.left)*sx, py=(cy-r.top)*sy;
+  pendingPoint={px,py};
+  document.getElementById('btn-confirm').disabled=false;
+  setInfo('ok',`Toque confirmado — pressione "Confirmar bolinha"`);
+  toast(`📍 ${SEQ[calStep].label.split('—')[0].trim()} tocada`);
+}
+
+function confirmPoint(){
+  if(!pendingPoint||calStep>=SEQ.length) return;
+  const cur=SEQ[calStep];
+  calPts.push({key:cur.key, px:pendingPoint.px, py:pendingPoint.py,
+                mx:cur.mx, my:cur.my, col:cur.col, grp:cur.grp});
+  calStep++;
+  pendingPoint=null;
+  document.getElementById('btn-confirm').disabled=true;
+  document.getElementById('cal-fill').style.width=(calStep/SEQ.length*100)+'%';
+  toast(`✓ ${cur.label} confirmado`);
+  speak('Ok');
+  if(calStep>=SEQ.length){
+    finishCalibration();
+  } else {
+    setInfo('warn',`Posicione a bolinha: ${SEQ[calStep].label}`);
+    updateBadge(`${calStep+1}/${SEQ.length}`,'hbadge-cal');
+  }
+}
+
+function skipToDuplicates(){
+  // Avança diretamente para os pontos de duplas
+  while(calStep<SEQ.length && SEQ[calStep].grp!=='dup') calStep++;
+  pendingPoint=null;
+  document.getElementById('btn-confirm').disabled=true;
+  if(calStep<SEQ.length){
+    setInfo('warn',`Posicione a bolinha: ${SEQ[calStep].label}`);
+  }
+}
+
+function reCal(){
+  stopDetection();
+  cancelAnimationFrame(calAnimId);
+  canvas.removeEventListener('click',onCanvasTap);
+  canvas.removeEventListener('touchend',onCanvasTapTouch);
+  calPts=[]; calStep=0; calibrated=false; pendingPoint=null;
+  gameRunning=false;
+  document.getElementById('ui-game').style.display='none';
+  document.getElementById('ui-pregame').style.display='none';
+  document.getElementById('review-btn').style.display='none';
+  startCalibration();
+}
+
+function finishCalibration(){
+  cancelAnimationFrame(calAnimId);
+  canvas.removeEventListener('click',onCanvasTap);
+  canvas.removeEventListener('touchend',onCanvasTapTouch);
+  calibrated=true;
+  buildVirtualMap();
+  document.getElementById('ui-cal').style.display='none';
+  document.getElementById('ui-pregame').style.display='flex';
+  updateBadge('Pronto','hbadge-cal');
+  setInfo('ok','Mapa calibrado. Retire as bolinhas e toque em Iniciar Jogo.');
+  speak('Calibração completa.');
+  toast('🎯 Calibração concluída — retire as bolinhas');
+  drawMapFrame();
+}
+
+/* ══ MAPA VIRTUAL EM PIXELS ══ */
+/* virtualMap contém as linhas críticas em coordenadas de PIXEL:
+   - lineSvc: {y_near, y_far, x_left, x_right} — retângulo da área de saque
+   - lineCourt: {y_top, y_bot, x_left, x_right} — retângulo da quadra de simples
+   - lineDup: {y_top, y_bot, x_left, x_right} — retângulo de duplas (se calibrado)
+*/
+let virtualMap={};
+
+function buildVirtualMap(){
+  /* Usa interpolação bilinear com os pontos calibrados para estimar
+     onde estão as linhas virtuais em pixels */
+  function pxOf(key){
+    const p=calPts.find(c=>c.key===key);
+    return p?{x:p.px,y:p.py}:null;
+  }
+  const P2=pxOf('P2'), P5=pxOf('P5'), P3=pxOf('P3'), P6=pxOf('P6');
+  const P8=pxOf('P8'), P10=pxOf('P10'), PC1=pxOf('PC1'), PC2=pxOf('PC2');
+  const P12=pxOf('P12'), P14=pxOf('P14');
+
+  // Área de saque: retângulo P2-P3-P6-P5
+  if(P2&&P3&&P5&&P6){
+    virtualMap.svc={
+      tl:P2, tr:P3, bl:P5, br:P6,
+      pts:[P2,P3,P6,P5]
+    };
+  }
+  // Quadra de simples: retângulo P10-P8-PC1-PC2
+  // (fundo A = P8/PC1 em x=L, fundo B = P10/PC2 em x=0)
+  if(P8&&P10&&PC1&&PC2){
+    virtualMap.court={
+      // 4 cantos: top-left, top-right, bottom-left, bottom-right
+      // "top" em pixels = fundo mais distante (y pequeno ou grande dependendo da câmera)
+      corners:[P10,P8,PC2,PC1],
+      pts:[P10,P8,PC1,PC2]
+    };
+  }
+  // Duplas
+  if(P12&&P14){
+    virtualMap.dup={pts:[P14,P12,PC1,PC2].filter(Boolean)};
+  }
+  console.log('Mapa virtual construído:', Object.keys(virtualMap));
+}
+
+/* Verifica se ponto (px,py) está DENTRO do polígono pts (array de {x,y}) */
+function pointInPoly(px,py,pts){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i].x,yi=pts[i].y,xj=pts[j].x,yj=pts[j].y;
+    if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+function isInsideSvcBox(px,py){
+  if(!virtualMap.svc) return false;
+  return pointInPoly(px,py,virtualMap.svc.pts);
+}
+function isInsideCourt(px,py){
+  if(!virtualMap.court) return false;
+  return pointInPoly(px,py,virtualMap.court.pts);
+}
+function isInsideDupCourt(px,py){
+  if(matchMode==='singles') return isInsideCourt(px,py);
+  if(virtualMap.dup&&virtualMap.dup.pts.length>=3)
+    return pointInPoly(px,py,virtualMap.dup.pts);
+  return isInsideCourt(px,py);
+}
+function isMyResponsibilityPx(px){
+  // Câmera A julga y > hwd → em pixels, o "centro" da imagem divide os lados
+  // Usamos P2/P5 (linha central) como referência
+  const P2=calPts.find(c=>c.key==='P2'), P5=calPts.find(c=>c.key==='P5');
+  if(!P2) return true;
+  // A linha central atravessa a imagem — simplificação: usa x do canvas como divisória
+  // (já que câmera está no centro do comprimento, a linha central aparece no centro do frame)
+  const midX=(P2.px+P5.px)/2;
+  return myPost==='A' ? px > midX*0.5 : px < midX*1.5;
+}
+
+/* ══ DESENHO DO CANVAS ══ */
+function drawCalFrame(){
+  if(!video.videoWidth){calAnimId=requestAnimationFrame(drawCalFrame);return;}
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // desenha pontos já confirmados
+  calPts.forEach((p,i)=>{
+    const cur=SEQ[i]||{};
+    ctx.beginPath(); ctx.arc(p.px,p.py,11,0,Math.PI*2);
+    ctx.fillStyle=cur.col||'#eab308'; ctx.fill();
+    ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle=cur.col==='#eab308'?'#1a1200':'white';
+    ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.key,p.px,p.py); ctx.textBaseline='alphabetic';
+  });
+  // ponto pendente (tocado, aguardando confirmar)
+  if(pendingPoint&&calStep<SEQ.length){
+    const col=SEQ[calStep].col;
+    ctx.beginPath(); ctx.arc(pendingPoint.px,pendingPoint.py,14,0,Math.PI*2);
+    ctx.fillStyle=col+'44'; ctx.fill();
+    ctx.beginPath(); ctx.arc(pendingPoint.px,pendingPoint.py,11,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.fill();
+    ctx.strokeStyle='white'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.fillStyle=col==='#eab308'?'#1a1200':'white';
+    ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(SEQ[calStep].key,pendingPoint.px,pendingPoint.py);
+    ctx.textBaseline='alphabetic';
+  }
+  // instrução na tela
+  if(calStep<SEQ.length){
+    const cur=SEQ[calStep];
+    const bw=Math.min(canvas.width-32,400), bx=(canvas.width-bw)/2, by=canvas.height*0.06;
+    ctx.fillStyle='rgba(0,0,0,.78)';
+    ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(bx,by,bw,58,10); else ctx.rect(bx,by,bw,58);
+    ctx.fill();
+    ctx.strokeStyle=cur.col+'99'; ctx.lineWidth=1.2; ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.45)'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(`Passo ${calStep+1} de ${SEQ.length}`,canvas.width/2,by+17);
+    ctx.fillStyle=cur.col; ctx.font='bold 14px sans-serif';
+    ctx.fillText(cur.label,canvas.width/2,by+39);
+    ctx.textAlign='left';
+  }
+  calAnimId=requestAnimationFrame(drawCalFrame);
+}
+
+function drawMapFrame(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // desenha mapa virtual
+  function drawPoly(pts,fill,stroke,dash,lw,lbl){
+    if(!pts||pts.length<3) return;
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y)); ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){
+      ctx.strokeStyle=stroke;ctx.lineWidth=lw||1.5;
+      ctx.setLineDash(dash||[]);ctx.stroke();ctx.setLineDash([]);
+    }
+    if(lbl){
+      const cx=pts.reduce((s,p)=>s+p.x,0)/pts.length;
+      const cy=pts.reduce((s,p)=>s+p.y,0)/pts.length;
+      ctx.fillStyle=stroke+'CC';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+      ctx.fillText(lbl,cx,cy+4);ctx.textAlign='left';
+    }
+  }
+  drawPoly(virtualMap.svc?.pts,'rgba(234,179,8,.1)','#eab308',[],2,'SAQUE');
+  drawPoly(virtualMap.court?.pts,'rgba(239,68,68,.08)','#ef4444',[],2,'SIMPLES');
+  if(matchMode==='doubles') drawPoly(virtualMap.dup?.pts,'rgba(168,85,247,.06)','#a855f7',[],1.5,'DUPLAS');
+  // pontos calibrados
+  calPts.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.px,p.py,9,0,Math.PI*2);
+    ctx.fillStyle=p.col;ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle=p.col==='#eab308'?'#1a1200':'white';
+    ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(p.key,p.px,p.py);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  });
+}
+
+/* ══ JOGO ══ */
+function startGame(){
+  gameRunning=true; currentPhase='serve'; serveAttempt=1;
+  document.getElementById('ui-pregame').style.display='none';
+  document.getElementById('ui-game').style.display='flex';
+  updatePhaseUI();
+  updateBadge('1º saque','hbadge-serve');
+  setInfo('ok','Detecção automática ativa — pode sacar!');
+  speak('Jogo iniciado. Pode sacar!');
+  toast('▶ Jogo iniciado');
+  startDetection();
+}
+function stopGame(){
+  gameRunning=false; stopDetection();
+  document.getElementById('ui-game').style.display='none';
+  document.getElementById('ui-pregame').style.display='flex';
+  updateBadge('Pronto','hbadge-cal');
+  setInfo('ok','Jogo parado.');
+  toast('⏸ Jogo parado');
+}
+function updatePhaseUI(){
+  const ind=document.getElementById('phase-ind');
+  const txt=document.getElementById('phase-txt');
+  if(currentPhase==='serve'){
+    ind.className='phase-ind phase-serve';
+    txt.textContent=`🎾 SAQUE — ${serveAttempt}ª tentativa`;
+    updateBadge(serveAttempt===1?'1º saque':'2º saque',
+                serveAttempt===1?'hbadge-serve':'hbadge-fault');
+  } else {
+    ind.className='phase-ind phase-rally';
+    txt.textContent='🏃 JOGO — quadra inteira';
+    updateBadge('Em jogo','hbadge-rally');
+  }
+}
+function resetToServe(){
+  currentPhase='serve'; serveAttempt=1; updatePhaseUI();
+  setInfo('ok','Próximo ponto — aguardando saque.');
+}
+
+function processBounce(px,py){
+  if(!gameRunning) return;
+  if(!isMyResponsibilityPx(px)) return; // silencioso
+  const scaleX=video.clientWidth/PROC_W;
+  const scaleY=video.clientHeight/(PROC_W*(video.videoHeight/video.videoWidth));
+  const screenX=px*scaleX, screenY=py*scaleY;
+  let isValid=false;
+  if(currentPhase==='serve'){
+    isValid=isInsideSvcBox(px,py);
+  } else {
+    isValid=isInsideDupCourt(px,py);
+  }
+  captureFrame(isValid?'IN':(currentPhase==='serve'?'OUT no saque':'OUT na quadra'));
+  if(isValid){
+    showMarker(screenX,screenY,'in');
+    if(currentPhase==='serve'){
+      currentPhase='rally'; updatePhaseUI();
+      toast('🟢 Saque dentro — rally!');
+    }
+  } else {
+    showMarker(screenX,screenY,'out');
+    speak('Out');
+    showBanner('OUT','#ef4444');
+    if(currentPhase==='serve'){
+      if(serveAttempt===1){
+        serveAttempt=2; updatePhaseUI();
+        toast('🔴 Falta — 2º saque');
+      } else {
+        toast('🔴 Dupla falta');
+        resetToServe();
+      }
+    } else {
+      toast('🔴 OUT — fim do ponto');
+      resetToServe();
+    }
+  }
+  document.getElementById('review-btn').style.display='block';
+}
+
+/* ══ DETECÇÃO HSV ══ */
+function isBallColor(r,g,b){
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),delta=max-min;
+  if(max<80||delta<20) return false;
+  let h;
+  if(max===r) h=60*(((g-b)/delta)%6);
+  else if(max===g) h=60*((b-r)/delta+2);
+  else h=60*((r-g)/delta+4);
+  if(h<0)h+=360;
+  const s=delta/max, v=max/255;
+  return h>=40&&h<=80&&s>0.35&&v>0.4;
+}
+function findBlob(imgData,w,h){
+  const d=imgData.data;
+  let sx=0,sy=0,cnt=0,minX=w,maxX=0,minY=h,maxY=0;
+  for(let y=0;y<h;y+=2) for(let x=0;x<w;x+=2){
+    const i=(y*w+x)*4;
+    if(isBallColor(d[i],d[i+1],d[i+2])){
+      sx+=x;sy+=y;cnt++;
+      if(x<minX)minX=x;if(x>maxX)maxX=x;
+      if(y<minY)minY=y;if(y>maxY)maxY=y;
+    }
+  }
+  if(cnt<4) return null;
+  if(maxX-minX>w*.4||maxY-minY>h*.4) return null;
+  return {x:sx/cnt,y:sy/cnt,size:cnt};
+}
+function checkBounce(){
+  if(ballHistory.length<6) return;
+  const now=Date.now();
+  if(now-lastBounceTime<BOUNCE_CD) return;
+  const n=ballHistory.length;
+  const recent=ballHistory.slice(n-7);
+  const verts=[];
+  for(let i=1;i<recent.length;i++)
+    verts.push({vy:recent[i].y-recent[i-1].y, pt:recent[i-1]});
+  let peakIdx=-1, peakVy=2;
+  for(let i=0;i<verts.length-1;i++)
+    if(verts[i].vy>peakVy&&verts[i+1].vy<verts[i].vy){peakVy=verts[i].vy;peakIdx=i;}
+  if(peakIdx>=0&&verts.slice(0,peakIdx).some(v=>v.vy>0)){
+    lastBounceTime=now;
+    processBounce(verts[peakIdx].pt.x, verts[peakIdx].pt.y);
+    ballHistory=[];
+  }
+}
+function startDetection(){
+  if(!procCanvas){procCanvas=document.createElement('canvas');procCtx=procCanvas.getContext('2d',{willReadFrequently:true});}
+  ballHistory=[]; detectionRunning=true;
+  document.getElementById('ds-dot').classList.add('active');
+  document.getElementById('ds-text').textContent='Detectando bola';
+  detectLoop();
+}
+function stopDetection(){
+  detectionRunning=false; cancelAnimationFrame(detectRAF);
+  document.getElementById('ds-dot').classList.remove('active');
+  document.getElementById('ds-text').textContent='Aguardando';
+  document.getElementById('ball-dot').style.opacity='0';
+}
+function detectLoop(){
+  if(!detectionRunning) return;
+  detectRAF=requestAnimationFrame(detectLoop);
+  if(video.readyState<2||!video.videoWidth) return;
+  const w=PROC_W, h=Math.round(PROC_W*(video.videoHeight/video.videoWidth));
+  if(procCanvas.width!==w||procCanvas.height!==h){procCanvas.width=w;procCanvas.height=h;}
+  procCtx.drawImage(video,0,0,w,h);
+  let img; try{img=procCtx.getImageData(0,0,w,h);}catch(e){return;}
+  const blob=findBlob(img,w,h);
+  const now=Date.now();
+  if(blob){
+    const sX=video.clientWidth/w, sY=video.clientHeight/h;
+    const dot=document.getElementById('ball-dot');
+    dot.style.left=(blob.x*sX)+'px'; dot.style.top=(blob.y*sY)+'px'; dot.style.opacity='1';
+    ballHistory.push({x:blob.x,y:blob.y,t:now});
+    if(ballHistory.length>HISTORY_MAX) ballHistory.shift();
+    checkBounce();
+  } else {
+    document.getElementById('ball-dot').style.opacity='0';
+    if(ballHistory.length&&now-ballHistory[ballHistory.length-1].t>400) ballHistory=[];
+  }
+  // Redesenha mapa virtual sobre o vídeo
+  if(calibrated) drawMapFrame();
+}
+
+/* ══ INDICADORES ══ */
+function showMarker(x,y,type){
+  const m=document.getElementById('detect-marker');
+  m.style.left=x+'px'; m.style.top=y+'px';
+  m.className=type==='in'?'show-in':'show-out';
+  clearTimeout(m._t);
+  m._t=setTimeout(()=>m.className='',type==='in'?3000:1600);
+}
+
+/* ══ REVISÃO (frame congelado) ══ */
+function captureFrame(label){
+  const rc=document.getElementById('rev-canvas');
+  rc.width=canvas.width; rc.height=canvas.height;
+  const rctx=rc.getContext('2d');
+  rctx.drawImage(video,0,0,rc.width,rc.height);
+  if(calibrated) rctx.drawImage(canvas,0,0);
+  lastReviewLabel=label; lastReviewTime=Date.now();
+}
+function openReview(){
+  document.getElementById('rev-title').textContent='Conferência — '+lastReviewLabel;
+  const s=Math.round((Date.now()-lastReviewTime)/1000);
+  document.getElementById('rev-info').textContent=
+    (s<=1?'Agora mesmo':`Há ${s}s`)+ ' — frame capturado no momento da marcação.';
+  showScreen('sc-review');
+}
+
+/* ══ INIT ══ */
+selectPost('A');
+selectMode('singles');
 </script>
 </body>
 </html>
