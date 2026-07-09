@@ -16,7 +16,6 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   overflow:hidden;touch-action:manipulation}
 
-/* ── TELAS ── */
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;
   overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:max(env(safe-area-inset-top,12px),12px) 14px
@@ -24,19 +23,16 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
   background:#0a0a0a;z-index:10}
 .screen.off{display:none!important}
 
-/* ── HOME ── */
+/* HOME */
 .logo{font-size:26px;font-weight:800;letter-spacing:-1px;color:var(--white);margin-top:4px}
 .logo span{color:var(--accent)}
 .logo-sub{font-size:11px;color:var(--muted);margin-top:1px}
-.slbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.7px;margin-top:6px}
+.slbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:6px}
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}
 .pcard{padding:12px 8px;border-radius:11px;border:1.5px solid var(--brd);
-  background:var(--sur1);display:flex;flex-direction:column;align-items:center;
-  gap:5px;cursor:pointer}
+  background:var(--sur1);display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
 .pcard.sel{border-color:var(--accent);background:rgba(200,245,58,.07)}
 .pcard .pname{font-size:12px;font-weight:600;color:var(--txt)}
-.pcard.sel .pname{color:var(--accent)}
 .pcard .pdesc{font-size:10px;color:var(--muted);text-align:center;line-height:1.3}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}
 .mcard{padding:9px 8px;border-radius:10px;border:1.5px solid var(--brd);
@@ -55,34 +51,20 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
 .ao{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#22c55e}
 .ae{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
 
-/* ══ CÂMERA — LAYOUT PAISAGEM ══
-   Usamos grid de 2 colunas em paisagem:
-   [vídeo] | [painel de controle]
-   O vídeo ocupa a maior parte, o painel fica fixo à direita.
-*/
+/* CÂMERA — grid paisagem: vídeo | painel */
 #cam-screen{padding:0;background:#000;display:grid;grid-template-columns:1fr auto}
 #cam-screen.off{display:none!important}
-
-/* Área do vídeo */
-#cam-area{position:relative;width:100%;height:100%}
+#cam-area{position:relative;width:100%;height:100%;overflow:hidden}
 #cam-video,#cam-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-#cam-canvas{z-index:5}
+#cam-canvas{z-index:5;pointer-events:none}
 
-/* Painel lateral direito (controles) */
-#ctrl-panel{
-  width:160px;min-width:148px;max-width:172px;
-  height:100vh;
-  background:rgba(0,0,0,.88);
-  border-left:1px solid var(--brd);
+#ctrl-panel{width:158px;min-width:148px;height:100vh;
+  background:rgba(0,0,0,.88);border-left:1px solid var(--brd);
   display:flex;flex-direction:column;
   padding:max(env(safe-area-inset-top,8px),8px) 10px
-          max(env(safe-area-inset-bottom,8px),8px)
-          max(env(safe-area-inset-right,10px),10px);
-  gap:7px;overflow-y:auto;z-index:30
-}
-
-/* Logo topo do painel */
-.cplogo{font-size:13px;font-weight:800;letter-spacing:-.5px;color:var(--white);flex-shrink:0}
+          max(env(safe-area-inset-bottom,8px),8px) 10px;
+  gap:7px;overflow-y:auto;z-index:30}
+.cplogo{font-size:13px;font-weight:800;letter-spacing:-.5px;color:var(--white)}
 .cplogo span{color:var(--accent)}
 .cptag{display:inline-block;padding:2px 7px;border-radius:100px;font-size:9px;font-weight:700}
 .tag-a{background:rgba(249,115,22,.2);color:#f97316;border:1px solid rgba(249,115,22,.4)}
@@ -91,55 +73,44 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
 .badge-cal{background:rgba(200,245,58,.1);color:var(--accent);border-color:rgba(200,245,58,.3)}
 .badge-srv{background:rgba(234,179,8,.1);color:var(--amber);border-color:rgba(234,179,8,.3)}
 .badge-rly{background:rgba(34,197,94,.1);color:var(--green);border-color:rgba(34,197,94,.3)}
-.badge-flt{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.3)}
-
 .divider{height:1px;background:var(--brd);flex-shrink:0}
-
-/* Info bar */
-.ibar{display:flex;align-items:flex-start;gap:6px;flex-shrink:0}
+.ibar{display:flex;align-items:flex-start;gap:6px}
 .idot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px;background:#555}
 .idot.ok{background:var(--green)}.idot.warn{background:var(--amber);animation:bl .9s infinite}
 .idot.err{background:var(--red);animation:bl .4s infinite}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
-.itxt{font-size:10px;color:rgba(255,255,255,.7);line-height:1.45}
-
-/* Barra de progresso de calibração */
-.cal-prog{flex-shrink:0}
+.itxt{font-size:10px;color:rgba(255,255,255,.7);line-height:1.45;white-space:pre-line}
+.det-status{display:flex;align-items:center;gap:5px}
+.det-dot{width:5px;height:5px;border-radius:50%;background:#555}
+.det-dot.on{background:var(--green);animation:bl 1s infinite}
+.det-txt{font-size:9.5px;color:var(--muted)}
 .cal-prog-bar{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
 .cal-prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
 .cal-prog-txt{font-size:9.5px;color:var(--muted);margin-top:3px}
-
-/* Botões do painel */
 .cpbtn{width:100%;padding:9px 7px;border-radius:9px;font-size:11.5px;font-weight:700;
   border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
-  flex-shrink:0;min-height:36px;line-height:1.2;text-align:center}
+  min-height:36px;line-height:1.2;text-align:center;flex-shrink:0}
 .cpbtn:active{opacity:.7;transform:scale(.97)}
 .cpbtn-confirm{background:var(--accent);color:#0a0a0a}
 .cpbtn-confirm:disabled{opacity:.3;cursor:default;transform:none}
 .cpbtn-start{background:rgba(200,245,58,.15);border:1.5px solid var(--accent);color:var(--accent)}
 .cpbtn-sm{background:var(--sur2);color:var(--muted);border:1px solid var(--brd);
   font-size:10px;font-weight:600;padding:7px 5px;min-height:30px}
-.cpbtn-row{display:flex;gap:5px;flex-shrink:0}
+.cpbtn-row{display:flex;gap:5px}
 .cpbtn-row .cpbtn{flex:1}
-.cpbtn-review{background:var(--sur1);color:rgba(255,255,255,.7);border:1px solid var(--brd);
-  font-size:10px;display:none}
-
-/* Indicador de fase */
-.phase-bar{padding:6px 8px;border-radius:8px;font-size:10.5px;font-weight:600;flex-shrink:0}
+.cpbtn-review{background:var(--sur1);color:rgba(255,255,255,.7);border:1px solid var(--brd);font-size:10px;display:none}
+.phase-bar{padding:6px 8px;border-radius:8px;font-size:10.5px;font-weight:600}
 .phase-serve{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);color:var(--amber)}
 .phase-rally{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green)}
 
-/* Status de detecção */
-.det-status{display:flex;align-items:center;gap:5px;flex-shrink:0}
-.det-dot{width:5px;height:5px;border-radius:50%;background:#555;flex-shrink:0}
-.det-dot.on{background:var(--green);animation:bl 1s infinite}
-.det-txt{font-size:9.5px;color:var(--muted)}
-
-/* ── Elementos sobre o vídeo ── */
+/* Elementos sobre o vídeo */
 #detect-ring{position:absolute;border-radius:50%;border:2.5px solid var(--accent);
-  pointer-events:none;opacity:0;transition:opacity .1s;z-index:10;
-  box-shadow:0 0 0 1px rgba(200,245,58,.3);transform:translate(-50%,-50%)}
+  pointer-events:none;opacity:0;z-index:10;transform:translate(-50%,-50%);
+  box-shadow:0 0 0 1px rgba(200,245,58,.3)}
 #detect-ring.show{opacity:1}
+#contact-dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--accent);
+  border:1.5px solid #0a0a0a;pointer-events:none;opacity:0;z-index:11;transform:translate(-50%,-50%)}
+#contact-dot.show{opacity:1}
 #detect-marker{position:absolute;border-radius:50%;pointer-events:none;opacity:0;z-index:12;
   transform:translate(-50%,-50%);transition:opacity .15s}
 #detect-marker.out{opacity:1;width:28px;height:28px;background:var(--red);
@@ -150,6 +121,21 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
   background:rgba(255,235,59,.9);border:1.5px solid rgba(255,255,255,.6);
   pointer-events:none;opacity:0;z-index:11;transform:translate(-50%,-50%)}
 #ball-dot.show{opacity:1}
+
+/* ALÇAS DE AJUSTE (arrastáveis) */
+.handle{position:absolute;width:44px;height:44px;z-index:25;
+  transform:translate(-50%,-50%);cursor:grab;touch-action:none;display:none}
+.handle.show{display:block}
+.handle-ring{position:absolute;inset:0;border-radius:50%;
+  border:2.5px solid var(--accent);background:rgba(200,245,58,.12)}
+.handle-core{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;
+  background:var(--accent);transform:translate(-50%,-50%);
+  box-shadow:0 0 8px rgba(200,245,58,.7)}
+.handle-lbl{position:absolute;left:50%;top:-16px;transform:translateX(-50%);
+  font-size:9px;font-weight:700;color:var(--accent);white-space:nowrap;
+  text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.handle.dragging .handle-ring{background:rgba(200,245,58,.25);border-width:3px}
+
 #banner{position:absolute;inset:0;z-index:50;display:flex;align-items:center;
   justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
 #banner.show{opacity:1}
@@ -161,11 +147,10 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
   overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1}
 
-/* ── REVISÃO ── */
+/* REVISÃO */
 #sc-review{padding:0;display:flex;flex-direction:column;background:#000}
 .rev-hd{display:flex;align-items:center;justify-content:space-between;
-  padding:max(env(safe-area-inset-top,10px),10px) 12px 8px;
-  background:rgba(0,0,0,.9);flex-shrink:0}
+  padding:max(env(safe-area-inset-top,10px),10px) 12px 8px;background:rgba(0,0,0,.9);flex-shrink:0}
 .rev-title{font-size:14px;font-weight:700;color:var(--red)}
 .rev-close{width:26px;height:26px;border-radius:50%;background:var(--sur2);
   border:1px solid var(--brd);color:var(--txt);font-size:15px;cursor:pointer;
@@ -175,7 +160,7 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
 .rev-ft{padding:10px 12px;background:rgba(0,0,0,.9);flex-shrink:0}
 .rev-info{font-size:10.5px;color:var(--muted);text-align:center;margin-bottom:7px}
 
-/* ── GUIA ── */
+/* GUIA */
 .gs{display:flex;gap:8px;padding:9px;border-radius:9px;background:var(--sur1);border:1px solid var(--brd)}
 .gsn{width:20px;height:20px;border-radius:50%;background:rgba(200,245,58,.15);
   border:1px solid rgba(200,245,58,.3);color:var(--accent);font-size:9.5px;
@@ -186,7 +171,7 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
 </head>
 <body>
 
-<!-- ══ HOME ══ -->
+<!-- HOME -->
 <div class="screen" id="sc-home">
   <div class="logo">Tennis<span>Eye</span></div>
   <div class="logo-sub">Sistema de arbitragem eletrônica</div>
@@ -217,81 +202,100 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
   <button class="bbtn bbtn-sec" onclick="showScreen('sc-guide')">📋 Guia de instalação</button>
 </div>
 
-<!-- ══ CÂMERA ══ -->
+<!-- CÂMERA -->
 <div class="screen off" id="cam-screen">
-  <!-- Área do vídeo -->
   <div id="cam-area">
     <video id="cam-video" autoplay playsinline muted></video>
     <canvas id="cam-canvas"></canvas>
     <div id="detect-ring"></div>
+    <div id="contact-dot"></div>
     <div id="detect-marker"></div>
     <div id="ball-dot"></div>
+
+    <!-- 4 alças de ajuste dos cantos -->
+    <div class="handle" id="h0" data-i="0">
+      <div class="handle-ring"></div><div class="handle-core"></div>
+      <div class="handle-lbl">Fundo B central</div>
+    </div>
+    <div class="handle" id="h1" data-i="1">
+      <div class="handle-ring"></div><div class="handle-core"></div>
+      <div class="handle-lbl">Fundo A central</div>
+    </div>
+    <div class="handle" id="h2" data-i="2">
+      <div class="handle-ring"></div><div class="handle-core"></div>
+      <div class="handle-lbl">Fundo A lateral</div>
+    </div>
+    <div class="handle" id="h3" data-i="3">
+      <div class="handle-ring"></div><div class="handle-core"></div>
+      <div class="handle-lbl">Fundo B lateral</div>
+    </div>
+
     <div id="banner"><span id="banner-txt"></span></div>
     <div id="toast"></div>
   </div>
 
-  <!-- Painel lateral de controle -->
+  <!-- Painel lateral -->
   <div id="ctrl-panel">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="display:flex;align-items:center;justify-content:space-between">
       <div class="cplogo">T<span>E</span></div>
       <span class="cptag tag-a" id="cp-tag">A</span>
     </div>
     <div class="badge badge-cal" id="cp-badge">Calibrar</div>
-
     <div class="divider"></div>
-
-    <!-- Status info -->
     <div class="ibar">
       <div class="idot warn" id="idot"></div>
       <div class="itxt" id="itxt">Iniciando...</div>
     </div>
-
-    <!-- Status de detecção automática -->
     <div class="det-status">
       <div class="det-dot" id="det-dot"></div>
-      <div class="det-txt" id="det-txt">Detectando...</div>
+      <div class="det-txt" id="det-txt">—</div>
     </div>
-
     <div class="divider"></div>
 
-    <!-- ── PAINEL CALIBRAÇÃO ── -->
-    <div id="ui-cal" style="display:flex;flex-direction:column;gap:6px">
-      <div class="cal-prog">
+    <!-- FASE 1-2: bolinhas -->
+    <div id="ui-ball" style="display:flex;flex-direction:column;gap:6px">
+      <div>
         <div class="cal-prog-bar"><div class="cal-prog-fill" id="cal-fill" style="width:0%"></div></div>
-        <div class="cal-prog-txt" id="cal-prog-txt">Passo 0/8</div>
+        <div class="cal-prog-txt" id="cal-prog-txt">Bolinha 1 de 2</div>
       </div>
-      <button class="cpbtn cpbtn-confirm" id="btn-confirm" onclick="confirmPoint()" disabled>
+      <button class="cpbtn cpbtn-confirm" id="btn-confirm" onclick="confirmBall()" disabled>
         ✓ Confirmar bolinha
       </button>
+      <button class="cpbtn cpbtn-sm" onclick="reCal()">↺ Reiniciar</button>
+    </div>
+
+    <!-- FASE 3: ajuste das alças -->
+    <div id="ui-adjust" style="display:none;flex-direction:column;gap:6px">
+      <div class="itxt" style="font-size:9.5px">Arraste as 4 alças até as linhas verdes coincidirem com as linhas brancas da quadra</div>
+      <button class="cpbtn cpbtn-confirm" onclick="confirmMap()">
+        ✓ Mapa alinhado
+      </button>
       <div class="cpbtn-row">
+        <button class="cpbtn cpbtn-sm" onclick="resetHandles()">⟲ Centralizar</button>
         <button class="cpbtn cpbtn-sm" onclick="reCal()">↺ Reiniciar</button>
-        <button class="cpbtn cpbtn-sm" onclick="backStep()" id="btn-back">← Voltar</button>
       </div>
     </div>
 
-    <!-- ── PAINEL PRÉ-JOGO ── -->
+    <!-- PRÉ-JOGO -->
     <div id="ui-pregame" style="display:none;flex-direction:column;gap:6px">
       <button class="cpbtn cpbtn-start" onclick="startGame()">▶ Iniciar Jogo</button>
+      <button class="cpbtn cpbtn-sm" onclick="backToAdjust()">✏ Ajustar mapa</button>
       <button class="cpbtn cpbtn-sm" onclick="reCal()">↺ Recalibrar</button>
     </div>
 
-    <!-- ── PAINEL JOGO ── -->
+    <!-- JOGO -->
     <div id="ui-game" style="display:none;flex-direction:column;gap:6px">
-      <div class="phase-bar phase-serve" id="phase-bar">
-        🎾 SAQUE 1ª
-      </div>
+      <div class="phase-bar phase-serve" id="phase-bar">🎾 SAQUE 1ª</div>
       <div class="cpbtn-row">
         <button class="cpbtn cpbtn-sm" onclick="stopGame()">⏸</button>
         <button class="cpbtn cpbtn-sm" onclick="reCal()">↺</button>
       </div>
-      <button class="cpbtn cpbtn-review" id="btn-review" onclick="openReview()">
-        🔍 Ver último lance
-      </button>
+      <button class="cpbtn cpbtn-review" id="btn-review" onclick="openReview()">🔍 Ver último lance</button>
     </div>
   </div>
 </div>
 
-<!-- ══ REVISÃO ══ -->
+<!-- REVISÃO -->
 <div class="screen off" id="sc-review" style="display:flex;flex-direction:column">
   <div class="rev-hd">
     <div class="rev-title" id="rev-title">Conferência</div>
@@ -304,445 +308,461 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
   </div>
 </div>
 
-<!-- ══ GUIA ══ -->
+<!-- GUIA -->
 <div class="screen off" id="sc-guide">
-  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;flex-shrink:0">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
     <div style="font-size:15px;font-weight:700">Guia de instalação</div>
     <button class="rev-close" onclick="showScreen('sc-home')">×</button>
   </div>
-  <div class="gs"><div class="gsn">1</div><div><div class="gst">Suporte 3D no topo do poste</div><div class="gss">Celular centralizado em paisagem, lente ultra-wide, 1,12m do solo.</div></div></div>
-  <div class="gs"><div class="gsn">2</div><div><div class="gst">Lente 0.5x obrigatória</div><div class="gss">FOV 170° necessário para cobrir a quadra oposta inteira.</div></div></div>
-  <div class="gs"><div class="gsn">3</div><div><div class="gst">Poste A esquerdo, B direito</div><div class="gss">Cada celular julga a metade oposta ao seu poste.</div></div></div>
-  <div class="gs"><div class="gsn">4</div><div><div class="gst">Sequência de calibração</div><div class="gss">P2→P5→P3→P6 (saque) → P8→P10→PC1→PC2 (simples) → P12→P14 (duplas)</div></div></div>
-  <div class="gs"><div class="gsn">5</div><div><div class="gst">Detecção automática</div><div class="gss">Posicione a bolinha — o sistema a detecta e circula em verde. Toque Confirmar.</div></div></div>
-  <div class="gs"><div class="gsn">6</div><div><div class="gst">Retire bolinhas e inicie</div><div class="gss">Após calibração, retire todas as bolinhas e toque Iniciar Jogo.</div></div></div>
+  <div class="gs"><div class="gsn">1</div><div><div class="gst">Suporte no topo do poste</div><div class="gss">Celular em paisagem, lente ultra-wide 0.5x, ~1,12m do solo.</div></div></div>
+  <div class="gs"><div class="gsn">2</div><div><div class="gst">Bolinha 1 — P2</div><div class="gss">Cruzamento da linha de saque PRÓXIMA com a linha central. Sistema detecta e circula. Confirme.</div></div></div>
+  <div class="gs"><div class="gsn">3</div><div><div class="gst">Bolinha 2 — P5</div><div class="gss">Cruzamento da linha de saque DISTANTE com a linha central. Confirme.</div></div></div>
+  <div class="gs"><div class="gsn">4</div><div><div class="gst">Grade projetada + 4 alças</div><div class="gss">O sistema projeta a grade da quadra. Arraste as alças dos 4 cantos até as linhas verdes coincidirem com as linhas brancas reais.</div></div></div>
+  <div class="gs"><div class="gsn">5</div><div><div class="gst">Confirmar mapa</div><div class="gss">Quando a grade estiver alinhada, toque "Mapa alinhado". Retire as bolinhas.</div></div></div>
+  <div class="gs"><div class="gsn">6</div><div><div class="gst">Iniciar jogo</div><div class="gss">Detecção automática: verde = IN, vermelho + som = OUT.</div></div></div>
 </div>
 
 <script>
 'use strict';
 
-/* ═══════════════════════════════════════
-   CONSTANTES E MEDIDAS REAIS
-═══════════════════════════════════════ */
+/* ═══ MEDIDAS REAIS (metros) ═══ */
 const L=23.77, Wd=10.97, Ws=8.23, SVC=6.40;
 const hl=L/2, hwd=Wd/2, hws=Ws/2;
 
-/* ═══════════════════════════════════════
-   ESTADO GLOBAL
-═══════════════════════════════════════ */
+/* ═══ ESTADO ═══ */
 let myPost='A', matchMode='singles';
 let gameRunning=false, currentPhase='serve', serveAttempt=1;
-let SEQ=[], calPts=[], calStep=0, calibrated=false;
+let calPhase='ball1'; // ball1 → ball2 → adjust → done
+let ballPts=[];       // [P2, P5] com {px,py} = PONTO DE CONTATO no solo (canvas coords)
+let H=null;           // homografia metros→pixels (matriz 3x3)
+let Hinv=null;
+let calibrated=false;
+let lastBlob=null, confirmEnabled=false;
 let calAnimId=null;
-let virtualMap={};
-let lastDetectedBlob=null; // bolinha detectada no frame atual (posição em pixels do PROC_W)
-let confirmEnabled=false;
 
-/* detecção contínua */
-let procCanvas=null, procCtx=null;
+/* Sistema de coordenadas do mundo (metros):
+   u = posição ao longo do COMPRIMENTO da quadra (0 a L)
+   v = posição na LARGURA dentro da metade julgada:
+       v=0 → linha central | v=hws → linha de simples | v=hwd → linha de duplas
+   Os 4 cantos ajustáveis (retângulo de simples do lado julgado):
+     C0=(0,0) fundo B × central | C1=(L,0) fundo A × central
+     C2=(L,hws) fundo A × simples | C3=(0,hws) fundo B × simples */
+const WORLD_CORNERS=[[0,0],[L,0],[L,hws],[0,hws]];
+let handles=[{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}]; // posições das alças em coords do CANVAS
+
+/* detecção */
+let procCanvas=null,procCtx=null;
 const PROC_W=320;
-let detRAF=null, detRunning=false;
-let ballHistory=[], lastBounceTime=0;
-const HIST_MAX=16, BOUNCE_CD=900;
+let detRAF=null,detRunning=false;
+let ballHistory=[],lastBounceTime=0;
+const HIST_MAX=16,BOUNCE_CD=900;
+let blobHistory=[];
+const STATIC_FRAMES=6;
 
-/* referências DOM */
+/* DOM */
 const video=document.getElementById('cam-video');
 const canvas=document.getElementById('cam-canvas');
 const ctx=canvas.getContext('2d');
 const ring=document.getElementById('detect-ring');
+const contactDot=document.getElementById('contact-dot');
 const marker=document.getElementById('detect-marker');
 const ballDot=document.getElementById('ball-dot');
 
-/* ═══════════════════════════════════════
-   NAVEGAÇÃO
-═══════════════════════════════════════ */
+/* ═══ NAVEGAÇÃO ═══ */
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
   const el=document.getElementById(id);
   el.classList.remove('off');
   if(id==='cam-screen') el.style.display='grid';
 }
-function setInfo(type,txt){
-  document.getElementById('idot').className='idot '+type;
-  document.getElementById('itxt').textContent=txt;
-}
-function toast(msg,dur=2000){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),dur);
-}
-function speak(txt){
-  try{const u=new SpeechSynthesisUtterance(txt);u.lang='en-US';u.rate=1.1;
-    setTimeout(()=>speechSynthesis.speak(u),80);}catch(e){}
-}
-function showBanner(txt,col){
-  const b=document.getElementById('banner');
-  const t=document.getElementById('banner-txt');
-  t.textContent=txt; t.style.color=col||'white';
-  b.classList.add('show');
-  clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('show'),1400);
-}
+function setInfo(t,x){document.getElementById('idot').className='idot '+t;
+  document.getElementById('itxt').textContent=x;}
+function toast(m,d=2000){const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),d);}
+function speak(x){try{const u=new SpeechSynthesisUtterance(x);u.lang='en-US';u.rate=1.1;
+  setTimeout(()=>speechSynthesis.speak(u),80);}catch(e){}}
+function showBanner(x,c){const b=document.getElementById('banner');
+  document.getElementById('banner-txt').textContent=x;
+  document.getElementById('banner-txt').style.color=c||'white';
+  b.classList.add('show');clearTimeout(b._t);
+  b._t=setTimeout(()=>b.classList.remove('show'),1400);}
 
-/* ═══════════════════════════════════════
-   HOME — SELEÇÕES
-═══════════════════════════════════════ */
-function selPost(p){
-  myPost=p;
-  ['A','B'].forEach(x=>{
-    document.getElementById('post-'+x.toLowerCase()).classList.toggle('sel',x===p);
-    document.getElementById('pname-'+x.toLowerCase()).style.color=
-      x===p?(p==='A'?'#f97316':'#3b9eff'):'';
+/* ═══ HOME ═══ */
+function selPost(p){myPost=p;
+  ['a','b'].forEach(x=>{
+    document.getElementById('post-'+x).classList.toggle('sel',x===p.toLowerCase());
+    document.getElementById('pname-'+x).style.color=
+      x===p.toLowerCase()?(p==='A'?'#f97316':'#3b9eff'):'';
   });
   const tag=document.getElementById('cp-tag');
-  tag.textContent=p; tag.className='cptag '+(p==='A'?'tag-a':'tag-b');
+  tag.textContent=p;tag.className='cptag '+(p==='A'?'tag-a':'tag-b');
 }
-function selMode(m){
-  matchMode=m;
+function selMode(m){matchMode=m;
   document.getElementById('mode-s').classList.toggle('sel',m==='singles');
   document.getElementById('mode-d').classList.toggle('sel',m==='doubles');
 }
 
-/* ═══════════════════════════════════════
-   CÂMERA
-═══════════════════════════════════════ */
+/* ═══ CÂMERA ═══ */
 async function checkCam(){
   try{
     const devs=await navigator.mediaDevices.enumerateDevices();
     const ok=devs.some(d=>d.kind==='videoinput');
     const el=document.getElementById('cam-status');
-    const btn=document.getElementById('btn-cam');
     const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
-    const safari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if(ios&&!safari){
-      el.className='alert ae';
-      el.textContent='⚠ No iPhone use o Safari (não Chrome)';
-    } else if(ok){
-      el.className='alert ao';
-      el.textContent='✓ Câmera pronta';
-      btn.disabled=false;
-    } else {
-      el.textContent='⚠ Câmera não encontrada';
-    }
+    const saf=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if(ios&&!saf){el.className='alert ae';el.textContent='⚠ No iPhone use Safari';}
+    else if(ok){el.className='alert ao';el.textContent='✓ Câmera pronta';
+      document.getElementById('btn-cam').disabled=false;}
+    else el.textContent='⚠ Câmera não encontrada';
   }catch(e){document.getElementById('cam-status').textContent='Erro: '+e.message;}
 }
 checkCam();
 
 async function openCam(){
   showScreen('cam-screen');
-  const constraints={video:{facingMode:{exact:'environment'},
-    width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}}};
   try{
-    const stream=await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject=stream;
+    const s=await navigator.mediaDevices.getUserMedia({video:{
+      facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}}});
+    video.srcObject=s;
     await new Promise(r=>{video.onloadedmetadata=r});
-    canvas.width=video.videoWidth||1280;
-    canvas.height=video.videoHeight||720;
-    startCalibration();
+    canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720;
+    startCal();
   }catch(e){
     try{
       const s2=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-      video.srcObject=s2; await new Promise(r=>{video.onloadedmetadata=r});
-      canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||720;
-      startCalibration();
+      video.srcObject=s2;await new Promise(r=>{video.onloadedmetadata=r});
+      canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720;
+      startCal();
     }catch(e2){setInfo('err','Erro câmera: '+e2.message);}
   }
 }
 
-/* ═══════════════════════════════════════
-   SEQUÊNCIA DE CALIBRAÇÃO
-═══════════════════════════════════════ */
-function buildSeq(){
-  /* Câmera A julga y > hwd (lado direito da largura)
-     Câmera B julga y < hwd (lado esquerdo)
-     mx = posição no COMPRIMENTO (eixo x real)
-     my = posição na LARGURA   (eixo y real) */
-  const right = myPost==='A';
-  const ys = right ? hwd+hws : hwd-hws;  // simples do lado julgado
-  const yd = right ? Wd : 0;             // duplas do lado julgado
-  const yc = hwd;                         // central (compartilhado)
-  const base=[
-    {key:'P2', lbl:'P2 — Saque próx × central',   col:'#c9a227', grp:'svc', mx:hl-SVC, my:yc},
-    {key:'P5', lbl:'P5 — Saque dist × central',   col:'#c9a227', grp:'svc', mx:hl+SVC, my:yc},
-    {key:'P3', lbl:'P3 — Saque próx × simples',   col:'#c9a227', grp:'svc', mx:hl-SVC, my:ys},
-    {key:'P6', lbl:'P6 — Saque dist × simples',   col:'#c9a227', grp:'svc', mx:hl+SVC, my:ys},
-    {key:'P8', lbl:'P8 — Fundo A × simples',      col:'#ef4444', grp:'crt', mx:L,      my:ys},
-    {key:'P10',lbl:'P10 — Fundo B × simples',     col:'#ef4444', grp:'crt', mx:0,      my:ys},
-    {key:'PC1',lbl:'PC1 — Fundo A × central',     col:'#ef4444', grp:'crt', mx:L,      my:yc},
-    {key:'PC2',lbl:'PC2 — Fundo B × central',     col:'#ef4444', grp:'crt', mx:0,      my:yc},
-    {key:'P12',lbl:'P12 — Fundo A × duplas',      col:'#a855f7', grp:'dup', mx:L,      my:yd},
-    {key:'P14',lbl:'P14 — Fundo B × duplas',      col:'#a855f7', grp:'dup', mx:0,      my:yd},
-  ];
-  return matchMode==='singles' ? base.filter(p=>p.grp!=='dup') : base;
-}
-
-/* ═══════════════════════════════════════
-   CALIBRAÇÃO — FLUXO PRINCIPAL
-═══════════════════════════════════════ */
-function startCalibration(){
-  SEQ=buildSeq();
-  calPts=[]; calStep=0; calibrated=false; lastDetectedBlob=null; confirmEnabled=false;
-  virtualMap={};
-  document.getElementById('ui-cal').style.display='flex';
-  document.getElementById('ui-pregame').style.display='none';
-  document.getElementById('ui-game').style.display='none';
+/* ═══ CALIBRAÇÃO — 3 FASES ═══ */
+function startCal(){
+  calPhase='ball1';ballPts=[];H=null;Hinv=null;calibrated=false;
+  lastBlob=null;confirmEnabled=false;gameRunning=false;
+  showPanel('ui-ball');
   document.getElementById('btn-confirm').disabled=true;
+  document.getElementById('cal-fill').style.width='0%';
+  document.getElementById('cal-prog-txt').textContent='Bolinha 1 de 2';
   document.getElementById('cp-badge').textContent='Calibrar';
   document.getElementById('cp-badge').className='badge badge-cal';
-  ring.classList.remove('show');
-  marker.className='';
-  updateCalUI();
-  startDetectionLoop(); // inicia detecção contínua (identifica bolinhas durante calibração)
-  calAnimId=requestAnimationFrame(drawCalFrame);
+  hideHandles();
+  ring.classList.remove('show');contactDot.classList.remove('show');
+  setInfo('warn','Bolinha 1 (P2):\nsaque PRÓXIMO × linha central');
+  startDetection();
+  cancelAnimationFrame(calAnimId);
+  calAnimId=requestAnimationFrame(drawLoop);
 }
 
-function updateCalUI(){
-  const total=SEQ.length;
-  const pct=Math.round(calStep/total*100);
-  document.getElementById('cal-fill').style.width=pct+'%';
-  document.getElementById('cal-prog-txt').textContent=`Passo ${calStep}/${total}`;
-  document.getElementById('btn-back').disabled=calStep===0;
-  if(calStep<total){
-    const cur=SEQ[calStep];
-    setInfo('warn',`Posicione a bolinha:\n${cur.lbl}`);
-    document.getElementById('cp-badge').textContent=`${calStep+1}/${total}`;
-  }
+function showPanel(id){
+  ['ui-ball','ui-adjust','ui-pregame','ui-game'].forEach(p=>
+    document.getElementById(p).style.display=p===id?'flex':'none');
 }
 
-/* Chamado pelo loop de detecção quando encontra bolinha estável */
-function onBallDetectedInCal(blob){
-  lastDetectedBlob=blob;
-  // Mostra o anel de detecção sobre a bolinha
-  const scaleX=video.clientWidth/PROC_W;
-  const scaleY=video.clientHeight/(PROC_W*(video.videoHeight/video.videoWidth));
-  const sx=blob.x*scaleX, sy=blob.y*scaleY;
-  const r=Math.max(blob.r*scaleX*1.4,18);
-  ring.style.left=sx+'px'; ring.style.top=sy+'px';
-  ring.style.width=(r*2)+'px'; ring.style.height=(r*2)+'px';
+/* Fase 1-2: detecção da bolinha com PONTO DE CONTATO no solo */
+function onBallStatic(blob){
+  lastBlob=blob;
+  const sX=video.clientWidth/PROC_W;
+  const sY=video.clientHeight/(PROC_W*(video.videoHeight/video.videoWidth));
+  // Anel no centro do blob
+  ring.style.left=(blob.x*sX)+'px';ring.style.top=(blob.y*sY)+'px';
+  const r=Math.max(blob.r*sX*1.5,16);
+  ring.style.width=(r*2)+'px';ring.style.height=(r*2)+'px';
   ring.classList.add('show');
-  // Habilita o botão de confirmar
+  // Ponto de contato = BASE do blob (onde a bolinha toca o solo)
+  contactDot.style.left=(blob.x*sX)+'px';
+  contactDot.style.top=(blob.bottomY*sY)+'px';
+  contactDot.classList.add('show');
   if(!confirmEnabled){
     confirmEnabled=true;
     document.getElementById('btn-confirm').disabled=false;
-    setInfo('ok','Bolinha detectada! Toque em Confirmar.');
+    setInfo('ok','Bolinha detectada!\nPonto de contato marcado.\nToque Confirmar.');
   }
 }
-
-function onNoBallInCal(){
-  ring.classList.remove('show');
+function onBallLost(){
+  ring.classList.remove('show');contactDot.classList.remove('show');
   if(confirmEnabled){
     confirmEnabled=false;
     document.getElementById('btn-confirm').disabled=true;
-    if(calStep<SEQ.length)
-      setInfo('warn','Posicione a bolinha:\n'+SEQ[calStep].lbl);
+    setInfo('warn',calPhase==='ball1'
+      ?'Bolinha 1 (P2):\nsaque PRÓXIMO × central'
+      :'Bolinha 2 (P5):\nsaque DISTANTE × central');
   }
-  lastDetectedBlob=null;
+  lastBlob=null;
 }
 
-function confirmPoint(){
-  if(!lastDetectedBlob || calStep>=SEQ.length) return;
-  const cur=SEQ[calStep];
+function confirmBall(){
+  if(!lastBlob) return;
+  // Converte ponto de contato para coords do canvas
   const scaleX=canvas.width/PROC_W;
   const scaleY=canvas.height/(PROC_W*(video.videoHeight/video.videoWidth));
-  const px=lastDetectedBlob.x*scaleX;
-  const py=lastDetectedBlob.y*scaleY;
-  calPts.push({key:cur.key, px, py, mx:cur.mx, my:cur.my, col:cur.col, grp:cur.grp});
-  calStep++;
-  lastDetectedBlob=null; confirmEnabled=false;
+  const px=lastBlob.x*scaleX;
+  const py=lastBlob.bottomY*scaleY; // BASE do blob = contato no solo
+  ballPts.push({px,py});
+  lastBlob=null;confirmEnabled=false;
   document.getElementById('btn-confirm').disabled=true;
-  ring.classList.remove('show');
+  ring.classList.remove('show');contactDot.classList.remove('show');
   speak('Ok');
-  toast(`✓ ${cur.key} confirmado`);
-  if(calStep>=SEQ.length){
-    finishCal();
+  if(calPhase==='ball1'){
+    calPhase='ball2';
+    document.getElementById('cal-fill').style.width='50%';
+    document.getElementById('cal-prog-txt').textContent='Bolinha 2 de 2';
+    setInfo('warn','Bolinha 2 (P5):\nsaque DISTANTE × central');
+    toast('✓ P2 confirmado');
   } else {
-    updateCalUI();
-    buildPartialMap(); // reconstrói mapa parcial progressivamente
+    calPhase='adjust';
+    document.getElementById('cal-fill').style.width='100%';
+    toast('✓ P5 confirmado — grade projetada');
+    initAdjustPhase();
   }
 }
 
-function backStep(){
-  if(calStep===0) return;
-  calStep--;
-  calPts=calPts.slice(0,calStep);
-  lastDetectedBlob=null; confirmEnabled=false;
-  document.getElementById('btn-confirm').disabled=true;
-  ring.classList.remove('show');
-  updateCalUI();
-  buildPartialMap();
-  toast('↺ Ponto removido — reposicione a bolinha');
+/* ═══ FASE 3: PROJEÇÃO + ALÇAS ═══ */
+function initAdjustPhase(){
+  estimateInitialHandles();
+  computeHomography();
+  showPanel('ui-adjust');
+  document.getElementById('cp-badge').textContent='Ajustar';
+  setInfo('warn','Arraste as alças até a grade\ncoincidir com as linhas brancas');
+  showHandles();
 }
 
-function reCal(){
-  cancelAnimationFrame(calAnimId);
-  stopDetectionLoop();
-  startCalibration();
-}
-
-function finishCal(){
-  cancelAnimationFrame(calAnimId);
-  calibrated=true;
-  buildFullMap();
-  document.getElementById('ui-cal').style.display='none';
-  document.getElementById('ui-pregame').style.display='flex';
-  document.getElementById('cp-badge').textContent='Pronto';
-  document.getElementById('cp-badge').className='badge badge-cal';
-  setInfo('ok','Calibrado! Retire as bolinhas e toque em Iniciar Jogo.');
-  speak('Calibração completa');
-  toast('🎯 Mapa pronto — retire as bolinhas!',3000);
-  drawFullMapFrame();
-}
-
-/* ═══════════════════════════════════════
-   MAPA VIRTUAL EM PIXELS
-   Construído progressivamente conforme pontos são confirmados.
-   Comparação bola vs linha em pixels — sem conversão para metros.
-═══════════════════════════════════════ */
-function pxOf(key){
-  return calPts.find(p=>p.key===key)||null;
-}
-
-function buildPartialMap(){
-  virtualMap={};
-  const P2=pxOf('P2'),P5=pxOf('P5'),P3=pxOf('P3'),P6=pxOf('P6');
-  const P8=pxOf('P8'),P10=pxOf('P10'),PC1=pxOf('PC1'),PC2=pxOf('PC2');
-  const P12=pxOf('P12'),P14=pxOf('P14');
-  // Saque: precisa de P2,P3,P5,P6
-  if(P2&&P3&&P5&&P6) virtualMap.svc={pts:[P2,P3,P6,P5]};
-  // Simples: precisa de todos os 4 pontos de fundo
-  if(P8&&P10&&PC1&&PC2) virtualMap.court={pts:[PC2,P10,P8,PC1]};
-  // Duplas
-  if(P12&&P14&&PC1&&PC2) virtualMap.dup={pts:[PC2,P14,P12,PC1]};
-}
-
-function buildFullMap(){ buildPartialMap(); }
-
-/* Point-in-polygon (ray casting) */
-function pip(px,py,pts){
-  let inside=false;
-  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
-    const xi=pts[i].px,yi=pts[i].py,xj=pts[j].px,yj=pts[j].py;
-    if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi)) inside=!inside;
-  }
-  return inside;
-}
-function inSvc(px,py){ return virtualMap.svc?pip(px,py,virtualMap.svc.pts):false; }
-function inCourt(px,py){ return virtualMap.court?pip(px,py,virtualMap.court.pts):false; }
-function inDup(px,py){
-  if(matchMode==='singles') return inCourt(px,py);
-  return (virtualMap.dup?pip(px,py,virtualMap.dup.pts):false)||inCourt(px,py);
-}
-
-/* Responsabilidade: câmera A julga o lado direito (y > linha central em pixels) */
-function isMyResp(px,py){
-  // Usamos os pontos calibrados P2/P5 (que ficam na linha central) como referência
-  const P2=pxOf('P2'), P5=pxOf('P5');
-  if(!P2||!P5) return true;
-  // Linha central passa por P2 e P5 — "direita" em pixels depende da orientação
-  // Interpolamos a posição x da linha central para o y do bounce
-  const t=(py-P2.py)/(P5.py-P2.py||1);
-  const xMid=P2.px+(P5.px-P2.px)*t;
-  return myPost==='A' ? px>xMid : px<xMid;
-}
-
-/* ═══════════════════════════════════════
-   DESENHO DO CANVAS
-═══════════════════════════════════════ */
-function drawMap(){
-  // Polígonos virtuais
-  function dpoly(pts,fill,stroke,dash,lw,lbl){
-    if(!pts||pts.length<3) return;
-    ctx.beginPath();
-    ctx.moveTo(pts[0].px,pts[0].py);
-    pts.forEach(p=>ctx.lineTo(p.px,p.py));
-    ctx.closePath();
-    if(fill){ctx.fillStyle=fill;ctx.fill();}
-    ctx.strokeStyle=stroke;ctx.lineWidth=lw||1.5;
-    ctx.setLineDash(dash||[]);ctx.stroke();ctx.setLineDash([]);
-    if(lbl){
-      const cx=pts.reduce((s,p)=>s+p.px,0)/pts.length;
-      const cy=pts.reduce((s,p)=>s+p.py,0)/pts.length;
-      ctx.fillStyle=stroke+'CC';ctx.font='bold 12px sans-serif';ctx.textAlign='center';
-      ctx.fillText(lbl,cx,cy+4);ctx.textAlign='left';
-    }
-  }
-  dpoly(virtualMap.svc?.pts,'rgba(201,162,39,.1)','#c9a227',[6,4],1.8,'SAQUE');
-  dpoly(virtualMap.court?.pts,'rgba(239,68,68,.09)','#ef4444',[5,3],1.8,'SIMPLES');
-  if(matchMode==='doubles')
-    dpoly(virtualMap.dup?.pts,'rgba(168,85,247,.07)','#a855f7',[4,4],1.4,'DUPLAS');
-}
-
-function drawCalPts(){
-  calPts.forEach(p=>{
-    // sombra
-    ctx.beginPath();ctx.arc(p.px+1.5,p.py+1.5,10,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,.35)';ctx.fill();
-    // bolinha
-    ctx.beginPath();ctx.arc(p.px,p.py,10,0,Math.PI*2);
-    ctx.fillStyle=p.col;ctx.fill();
-    ctx.strokeStyle='white';ctx.lineWidth=1.8;ctx.stroke();
-    // label
-    ctx.fillStyle=p.col==='#c9a227'?'#1a1200':'white';
-    ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(p.key,p.px,p.py);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+/* Estimativa inicial dos 4 cantos a partir de P2 e P5.
+   P2 = (u=hl-SVC, v=0) e P5 = (u=hl+SVC, v=0) no mundo.
+   Direção central em pixels: vetor P2→P5.
+   Escala local: |P2P5|px / 12.8m.
+   Perspectiva: pontos mais distantes (fundo) comprimem — estimamos com fator simples.
+   O usuário corrige com as alças — a estimativa só precisa ser razoável. */
+function estimateInitialHandles(){
+  const [B1,B2]=ballPts; // P2, P5 em pixels (contato no solo)
+  const dx=B2.px-B1.px, dy=B2.py-B1.py;
+  const distPx=Math.hypot(dx,dy);
+  const scale=distPx/(2*SVC); // px por metro ao longo do eixo central
+  // vetor unitário do eixo central (P2→P5 = direção de u crescente)
+  const ux=dx/distPx, uy=dy/distPx;
+  // vetor perpendicular (direção de v crescente = lado julgado)
+  // rotação 90°: (-uy, ux) ou (uy, -ux) — lado depende do poste
+  let vx=-uy, vy=ux;
+  if(myPost==='B'){vx=uy;vy=-ux;}
+  // Perspectiva: pontos longe da câmera ficam menores.
+  // P2 está a hl-SVC=5.49m do fundo B; P5 a hl-SVC do fundo A.
+  // Extrapolamos linearmente com compressão de 35% nos extremos (estimativa).
+  const persp=0.72; // fator de compressão para os fundos
+  // C0 = fundo B central: u=0 → andar (hl-SVC) m para trás de P2
+  const dBack=(hl-SVC)*scale*persp;
+  handles[0]={x:B1.px-ux*dBack, y:B1.py-uy*dBack};
+  // C1 = fundo A central: u=L → andar (hl-SVC) m para frente de P5
+  handles[1]={x:B2.px+ux*dBack, y:B2.py+uy*dBack};
+  // C2/C3 = laterais de simples: deslocar hws na direção v
+  const dSide=hws*scale*persp;
+  handles[2]={x:handles[1].x+vx*dSide, y:handles[1].y+vy*dSide};
+  handles[3]={x:handles[0].x+vx*dSide, y:handles[0].y+vy*dSide};
+  // Limita dentro do canvas
+  handles.forEach(h=>{
+    h.x=Math.max(20,Math.min(canvas.width-20,h.x));
+    h.y=Math.max(20,Math.min(canvas.height-20,h.y));
   });
 }
 
-function drawCalInstruction(){
-  if(calStep>=SEQ.length) return;
-  const cur=SEQ[calStep];
-  const W=canvas.width, bw=Math.min(W-24,340);
-  const bx=(W-bw)/2, by=12;
-  ctx.fillStyle='rgba(0,0,0,.75)';
-  ctx.beginPath();
-  if(ctx.roundRect) ctx.roundRect(bx,by,bw,52,8);
-  else ctx.rect(bx,by,bw,52);
-  ctx.fill();
-  ctx.strokeStyle=cur.col+'88';ctx.lineWidth=1;ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,.42)';ctx.font='10px sans-serif';ctx.textAlign='center';
-  ctx.fillText(`Passo ${calStep+1}/${SEQ.length}`,W/2,by+16);
-  ctx.fillStyle=cur.col;ctx.font='bold 13px sans-serif';
-  ctx.fillText(cur.lbl,W/2,by+36);
-  ctx.textAlign='left';
+function resetHandles(){estimateInitialHandles();computeHomography();positionHandleEls();}
+
+/* ═══ HOMOGRAFIA 4 PONTOS (DLT) ═══
+   Mapeia mundo (u,v) metros → pixels (x,y).
+   Resolve sistema 8x8 por eliminação gaussiana. */
+function computeHomography(){
+  const src=WORLD_CORNERS;             // [[u,v],...]
+  const dst=handles.map(h=>[h.x,h.y]); // [[x,y],...]
+  const A=[],b=[];
+  for(let i=0;i<4;i++){
+    const [u,v]=src[i],[x,y]=dst[i];
+    A.push([u,v,1,0,0,0,-u*x,-v*x]); b.push(x);
+    A.push([0,0,0,u,v,1,-u*y,-v*y]); b.push(y);
+  }
+  const h=solve8(A,b);
+  if(!h) return;
+  H=[[h[0],h[1],h[2]],[h[3],h[4],h[5]],[h[6],h[7],1]];
+  Hinv=invert3(H);
+}
+function solve8(A,b){
+  const n=8;const M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){
+    let piv=c;
+    for(let r=c+1;r<n;r++) if(Math.abs(M[r][c])>Math.abs(M[piv][c])) piv=r;
+    if(Math.abs(M[piv][c])<1e-10) return null;
+    [M[c],M[piv]]=[M[piv],M[c]];
+    for(let r=0;r<n;r++){
+      if(r===c) continue;
+      const f=M[r][c]/M[c][c];
+      for(let k=c;k<=n;k++) M[r][k]-=f*M[c][k];
+    }
+  }
+  return M.map((r,i)=>r[n]/r[i]);
+}
+function invert3(m){
+  const [a,b,c]=m[0],[d,e,f]=m[1],[g,h2,i]=m[2];
+  const det=a*(e*i-f*h2)-b*(d*i-f*g)+c*(d*h2-e*g);
+  if(Math.abs(det)<1e-12) return null;
+  const s=1/det;
+  return [
+    [(e*i-f*h2)*s,(c*h2-b*i)*s,(b*f-c*e)*s],
+    [(f*g-d*i)*s,(a*i-c*g)*s,(c*d-a*f)*s],
+    [(d*h2-e*g)*s,(b*g-a*h2)*s,(a*e-b*d)*s]
+  ];
+}
+/* mundo (u,v) → pixel */
+function w2p(u,v){
+  if(!H) return null;
+  const w=H[2][0]*u+H[2][1]*v+H[2][2];
+  return {x:(H[0][0]*u+H[0][1]*v+H[0][2])/w,
+          y:(H[1][0]*u+H[1][1]*v+H[1][2])/w};
+}
+/* pixel → mundo (u,v) */
+function p2w(x,y){
+  if(!Hinv) return null;
+  const w=Hinv[2][0]*x+Hinv[2][1]*y+Hinv[2][2];
+  return {u:(Hinv[0][0]*x+Hinv[0][1]*y+Hinv[0][2])/w,
+          v:(Hinv[1][0]*x+Hinv[1][1]*y+Hinv[1][2])/w};
 }
 
-function drawCalFrame(){
+/* ═══ ALÇAS ARRASTÁVEIS ═══
+   As alças vivem em coords do CANVAS. Convertemos para coords de TELA
+   ao posicionar os elementos DOM. */
+function canvasToScreen(cx,cy){
+  const sX=video.clientWidth/canvas.width;
+  const sY=video.clientHeight/canvas.height;
+  return {x:cx*sX,y:cy*sY};
+}
+function screenToCanvas(sx,sy){
+  const sX=canvas.width/video.clientWidth;
+  const sY=canvas.height/video.clientHeight;
+  return {x:sx*sX,y:sy*sY};
+}
+function positionHandleEls(){
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('h'+i);
+    const s=canvasToScreen(handles[i].x,handles[i].y);
+    el.style.left=s.x+'px';el.style.top=s.y+'px';
+  }
+}
+function showHandles(){
+  positionHandleEls();
+  for(let i=0;i<4;i++) document.getElementById('h'+i).classList.add('show');
+}
+function hideHandles(){
+  for(let i=0;i<4;i++) document.getElementById('h'+i).classList.remove('show');
+}
+
+/* Drag das alças (pointer events) */
+let dragIdx=-1;
+for(let i=0;i<4;i++){
+  const el=document.getElementById('h'+i);
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault();dragIdx=i;
+    el.classList.add('dragging');
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove',e=>{
+    if(dragIdx!==i) return;
+    e.preventDefault();
+    const rect=document.getElementById('cam-area').getBoundingClientRect();
+    const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+    const c=screenToCanvas(sx,sy);
+    handles[i].x=Math.max(0,Math.min(canvas.width,c.x));
+    handles[i].y=Math.max(0,Math.min(canvas.height,c.y));
+    positionHandleEls();
+    computeHomography();
+  });
+  el.addEventListener('pointerup',e=>{
+    dragIdx=-1;el.classList.remove('dragging');
+  });
+  el.addEventListener('pointercancel',()=>{
+    dragIdx=-1;el.classList.remove('dragging');
+  });
+}
+
+function confirmMap(){
+  if(!H){toast('⚠ Ajuste as alças primeiro');return;}
+  calibrated=true;calPhase='done';
+  hideHandles();
+  showPanel('ui-pregame');
+  document.getElementById('cp-badge').textContent='Pronto';
+  setInfo('ok','Mapa fixado!\nRetire as bolinhas\ne toque Iniciar Jogo.');
+  speak('Calibração completa');
+  toast('🎯 Mapa calibrado — retire as bolinhas',3000);
+}
+function backToAdjust(){
+  calibrated=false;calPhase='adjust';
+  showPanel('ui-adjust');
+  showHandles();
+  setInfo('warn','Ajuste as alças e confirme');
+}
+
+/* ═══ DESENHO DA GRADE ═══ */
+function drawGrid(){
+  if(!H) return;
+  const green='rgba(200,245,58,.95)';
+  const greenDim='rgba(200,245,58,.4)';
+  function line(u1,v1,u2,v2,col,w,dash){
+    const a=w2p(u1,v1),b=w2p(u2,v2);
+    if(!a||!b) return;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+    ctx.strokeStyle=col;ctx.lineWidth=w;
+    ctx.setLineDash(dash||[]);ctx.stroke();ctx.setLineDash([]);
+  }
+  const vDup=matchMode==='doubles'?hwd:hws;
+  /* Contorno externo do lado julgado */
+  line(0,0,L,0,green,2.5);         // linha central (rede→fundos)
+  line(0,hws,L,hws,green,2.5);     // linha de simples
+  line(0,0,0,vDup,green,2.5);      // fundo B
+  line(L,0,L,vDup,green,2.5);      // fundo A
+  /* Linhas de saque */
+  line(hl-SVC,0,hl-SVC,hws,'rgba(234,179,8,.9)',2);   // saque próx
+  line(hl+SVC,0,hl+SVC,hws,'rgba(234,179,8,.9)',2);   // saque dist
+  /* Rede (referência) */
+  line(hl,0,hl,vDup,'rgba(255,255,255,.5)',1.5,[8,5]);
+  /* Duplas */
+  if(matchMode==='doubles'){
+    line(0,hwd,L,hwd,'rgba(168,85,247,.9)',2);
+    line(0,hws,0,hwd,'rgba(168,85,247,.9)',2);
+    line(L,hws,L,hwd,'rgba(168,85,247,.9)',2);
+  }
+  /* Grade interna sutil (referência visual) */
+  for(let u=2;u<L;u+=2) line(u,0,u,hws,greenDim,.5,[3,5]);
+  /* Pontos das bolinhas confirmadas */
+  ballPts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.px,p.py,7,0,Math.PI*2);
+    ctx.fillStyle='#c9a227';ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#1a1200';ctx.font='bold 8px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(i===0?'P2':'P5',p.px,p.py);
+    ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  });
+}
+
+function drawLoop(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(Object.keys(virtualMap).length) drawMap();
-  drawCalPts();
-  drawCalInstruction();
-  calAnimId=requestAnimationFrame(drawCalFrame);
+  if(calPhase==='adjust'||calibrated) drawGrid();
+  if(calPhase==='adjust') positionHandleEls();
+  calAnimId=requestAnimationFrame(drawLoop);
 }
 
-function drawFullMapFrame(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawMap();
-  drawCalPts();
-  // Label central
-  ctx.fillStyle='rgba(200,245,58,.85)';ctx.font='bold 13px sans-serif';ctx.textAlign='center';
-  ctx.fillText('✓ MAPA CALIBRADO',canvas.width/2,canvas.height-14);
-  ctx.textAlign='left';
-}
-
-/* ═══════════════════════════════════════
-   DETECÇÃO DE BOLINHA (HSV)
-   Roda em loop contínuo — serve tanto para calibração
-   (identifica bolinha no ponto pedido) quanto para jogo
-   (detecta bounce da bola em movimento).
-═══════════════════════════════════════ */
+/* ═══ DETECÇÃO HSV ═══ */
 function isBallColor(r,g,b){
   const max=Math.max(r,g,b),min=Math.min(r,g,b),delta=max-min;
   if(max<75||delta<18) return false;
   let h;
-  if(max===r) h=60*(((g-b)/delta)%6);
-  else if(max===g) h=60*((b-r)/delta+2);
+  if(max===r)h=60*(((g-b)/delta)%6);
+  else if(max===g)h=60*((b-r)/delta+2);
   else h=60*((r-g)/delta+4);
   if(h<0)h+=360;
   const s=delta/max,v=max/255;
   return h>=38&&h<=82&&s>0.32&&v>0.38;
 }
-
-function findBlob(imgData,w,h){
-  const d=imgData.data;
+function findBlob(img,w,h){
+  const d=img.data;
   let sx=0,sy=0,cnt=0,mnX=w,mxX=0,mnY=h,mxY=0;
   for(let y=0;y<h;y+=2)for(let x=0;x<w;x+=2){
     const i=(y*w+x)*4;
@@ -754,130 +774,111 @@ function findBlob(imgData,w,h){
   if(cnt<3) return null;
   const bw=mxX-mnX,bh=mxY-mnY;
   if(bw>w*.45||bh>h*.45) return null;
-  return {x:sx/cnt,y:sy/cnt,r:Math.max(bw,bh)/2,size:cnt};
+  return {x:sx/cnt,y:sy/cnt,r:Math.max(bw,bh)/2,bottomY:mxY,size:cnt};
 }
-
-/* Histórico para distinguir bolinha estática (calibração) de bola em movimento (jogo) */
-let blobHistory=[];  // últimas posições do blob detectado
-const STATIC_FRAMES=6; // quantos frames precisa estar parado para confirmar na calibração
-
-function isStatic(blob){
+function isStatic(){
   if(blobHistory.length<STATIC_FRAMES) return false;
-  const recent=blobHistory.slice(-STATIC_FRAMES);
-  const dx=Math.max(...recent.map(b=>b.x))-Math.min(...recent.map(b=>b.x));
-  const dy=Math.max(...recent.map(b=>b.y))-Math.min(...recent.map(b=>b.y));
-  return dx<4 && dy<4; // movimento < 4px = estático
+  const r=blobHistory.slice(-STATIC_FRAMES);
+  const dx=Math.max(...r.map(b=>b.x))-Math.min(...r.map(b=>b.x));
+  const dy=Math.max(...r.map(b=>b.y))-Math.min(...r.map(b=>b.y));
+  return dx<4&&dy<4;
 }
 
-function startDetectionLoop(){
-  if(!procCanvas){
-    procCanvas=document.createElement('canvas');
-    procCtx=procCanvas.getContext('2d',{willReadFrequently:true});
-  }
-  ballHistory=[]; blobHistory=[]; detRunning=true;
+function startDetection(){
+  if(!procCanvas){procCanvas=document.createElement('canvas');
+    procCtx=procCanvas.getContext('2d',{willReadFrequently:true});}
+  ballHistory=[];blobHistory=[];detRunning=true;
   document.getElementById('det-dot').classList.add('on');
   document.getElementById('det-txt').textContent='Detectando';
   detLoop();
 }
-
-function stopDetectionLoop(){
-  detRunning=false; cancelAnimationFrame(detRAF);
+function stopDetection(){
+  detRunning=false;cancelAnimationFrame(detRAF);
   document.getElementById('det-dot').classList.remove('on');
   document.getElementById('det-txt').textContent='Parado';
   ballDot.classList.remove('show');
 }
-
 function detLoop(){
-  if(!detRunning){return;}
+  if(!detRunning) return;
   detRAF=requestAnimationFrame(detLoop);
   if(video.readyState<2||!video.videoWidth) return;
-
-  const w=PROC_W, h=Math.round(PROC_W*(video.videoHeight/video.videoWidth));
+  const w=PROC_W,h=Math.round(PROC_W*(video.videoHeight/video.videoWidth));
   if(procCanvas.width!==w||procCanvas.height!==h){procCanvas.width=w;procCanvas.height=h;}
   procCtx.drawImage(video,0,0,w,h);
-  let img; try{img=procCtx.getImageData(0,0,w,h);}catch(e){return;}
-
+  let img;try{img=procCtx.getImageData(0,0,w,h);}catch(e){return;}
   const blob=findBlob(img,w,h);
-  const scaleX=video.clientWidth/w;
-  const scaleY=video.clientHeight/(w*(video.videoHeight/video.videoWidth));
   const now=Date.now();
-
+  const sX=video.clientWidth/w,sY=video.clientHeight/(w*(video.videoHeight/video.videoWidth));
   if(blob){
     blobHistory.push({x:blob.x,y:blob.y,t:now});
     if(blobHistory.length>20) blobHistory.shift();
-
-    // Mostra ponto de rastreamento
-    ballDot.style.left=(blob.x*scaleX)+'px';
-    ballDot.style.top=(blob.y*scaleY)+'px';
+    ballDot.style.left=(blob.x*sX)+'px';
+    ballDot.style.top=(blob.y*sY)+'px';
     ballDot.classList.add('show');
-
-    if(!calibrated){
-      // MODO CALIBRAÇÃO: detecta bolinha estática
-      if(isStatic(blob)){
-        onBallDetectedInCal(blob);
-      } else {
-        onNoBallInCal();
-      }
+    if((calPhase==='ball1'||calPhase==='ball2')){
+      if(isStatic()) onBallStatic(blob);
+      else onBallLost();
     } else if(gameRunning){
-      // MODO JOGO: detecta bounce (bola em movimento)
-      ballHistory.push({x:blob.x,y:blob.y,t:now});
+      ballHistory.push({x:blob.x,y:blob.y,bottomY:blob.bottomY,t:now});
       if(ballHistory.length>HIST_MAX) ballHistory.shift();
       checkBounce();
     }
   } else {
     blobHistory=[];
     ballDot.classList.remove('show');
-    if(!calibrated) onNoBallInCal();
+    if(calPhase==='ball1'||calPhase==='ball2') onBallLost();
     if(ballHistory.length&&now-ballHistory[ballHistory.length-1].t>400) ballHistory=[];
   }
 }
 
-/* ═══════════════════════════════════════
-   DETECÇÃO DE BOUNCE (jogo)
-═══════════════════════════════════════ */
+/* ═══ BOUNCE ═══ */
 function checkBounce(){
   if(ballHistory.length<6) return;
   const now=Date.now();
   if(now-lastBounceTime<BOUNCE_CD) return;
-  const n=ballHistory.length;
-  const recent=ballHistory.slice(n-7);
+  const recent=ballHistory.slice(-7);
   const verts=[];
   for(let i=1;i<recent.length;i++)
     verts.push({vy:recent[i].y-recent[i-1].y,pt:recent[i-1]});
-  let peakIdx=-1,peakVy=2;
+  let pk=-1,pv=2;
   for(let i=0;i<verts.length-1;i++)
-    if(verts[i].vy>peakVy&&verts[i+1].vy<verts[i].vy){peakVy=verts[i].vy;peakIdx=i;}
-  if(peakIdx>=0&&verts.slice(0,peakIdx).some(v=>v.vy>0)){
+    if(verts[i].vy>pv&&verts[i+1].vy<verts[i].vy){pv=verts[i].vy;pk=i;}
+  if(pk>=0&&verts.slice(0,pk).some(v=>v.vy>0)){
     lastBounceTime=now;
-    const bp=verts[peakIdx].pt;
-    processBounce(bp.x,bp.y);
+    const bp=verts[pk].pt;
+    processBounce(bp.x,bp.bottomY||bp.y);
     ballHistory=[];
   }
 }
 
-function processBounce(bx,by){
-  if(!gameRunning) return;
-  // Converte para coordenadas do canvas principal
+function processBounce(bx,byBottom){
+  if(!gameRunning||!Hinv) return;
+  /* Ponto de contato da bola no solo → coordenadas do canvas → mundo */
   const scaleX=canvas.width/PROC_W;
   const scaleY=canvas.height/(PROC_W*(video.videoHeight/video.videoWidth));
-  const cpx=bx*scaleX, cpy=by*scaleY;
-  if(!isMyResp(cpx,cpy)) return;
-
-  // Coordenadas de tela para o marcador visual
-  const scX=video.clientWidth/PROC_W, scY=video.clientHeight/(PROC_W*(video.videoHeight/video.videoWidth));
-  const sx=bx*scX, sy=by*scY;
+  const cpx=bx*scaleX,cpy=byBottom*scaleY;
+  const wpt=p2w(cpx,cpy);
+  if(!wpt) return;
+  const {u,v}=wpt;
+  /* Responsabilidade: só julga o que cai no lado julgado (v de -margem até vDup) */
+  const vMax=matchMode==='doubles'?hwd:hws;
+  const MARGIN=1.0; // 1m de margem além das linhas para julgar OUT próximo
+  if(v<-MARGIN||v>vMax+2||u<-2||u>L+2) return; // fora da região de interesse
   let valid;
-  if(currentPhase==='serve') valid=inSvc(cpx,cpy);
-  else valid=inDup(cpx,cpy);
-
-  captureFrame(valid?'IN':(currentPhase==='serve'?'OUT no saque':'OUT na quadra'));
-  showMarker(sx,sy,valid?'in':'out');
-  if(valid){
-    if(currentPhase==='serve'){
-      currentPhase='rally';updatePhaseUI();toast('🟢 Saque dentro — rally!');
-    }
+  if(currentPhase==='serve'){
+    /* área de saque: u entre hl-SVC e hl+SVC... espera — saque válido é
+       APENAS um dos boxes. Simplificação para o piloto: qualquer um dos boxes */
+    valid=(u>=hl-SVC&&u<=hl+SVC&&v>=0&&v<=hws);
   } else {
-    speak('Out'); showBanner('OUT','#ef4444');
+    valid=(u>=0&&u<=L&&v>=0&&v<=vMax);
+  }
+  const sX=video.clientWidth/PROC_W,sY=video.clientHeight/(PROC_W*(video.videoHeight/video.videoWidth));
+  captureFrame(valid?'IN':(currentPhase==='serve'?'OUT no saque':'OUT'));
+  showMarker(bx*sX,byBottom*sY,valid?'in':'out');
+  if(valid){
+    if(currentPhase==='serve'){currentPhase='rally';updatePhaseUI();toast('🟢 Saque OK — rally!');}
+  } else {
+    speak('Out');showBanner('OUT','#ef4444');
     if(currentPhase==='serve'){
       if(serveAttempt===1){serveAttempt=2;updatePhaseUI();toast('🔴 Falta — 2º saque');}
       else{toast('🔴 Dupla falta');resetServe();}
@@ -886,64 +887,54 @@ function processBounce(bx,by){
   document.getElementById('btn-review').style.display='block';
 }
 
-/* ═══════════════════════════════════════
-   JOGO
-═══════════════════════════════════════ */
+/* ═══ JOGO ═══ */
 function startGame(){
-  gameRunning=true; currentPhase='serve'; serveAttempt=1;
-  document.getElementById('ui-pregame').style.display='none';
-  document.getElementById('ui-game').style.display='flex';
+  gameRunning=true;currentPhase='serve';serveAttempt=1;
+  showPanel('ui-game');
   document.getElementById('btn-review').style.display='none';
   updatePhaseUI();
-  setInfo('ok','Detecção ativa — pode sacar!');
-  speak('Jogo iniciado. Pode sacar!');
-  toast('▶ Jogo iniciado');
-  // Loop de detecção já está rodando
+  setInfo('ok','Detecção ativa!\nPode sacar.');
+  speak('Jogo iniciado');toast('▶ Jogo iniciado');
 }
 function stopGame(){
   gameRunning=false;
-  document.getElementById('ui-game').style.display='none';
-  document.getElementById('ui-pregame').style.display='flex';
-  setInfo('ok','Jogo parado.');
-  toast('⏸ Jogo parado');
+  showPanel('ui-pregame');
+  setInfo('ok','Jogo parado.');toast('⏸ Parado');
 }
 function resetServe(){currentPhase='serve';serveAttempt=1;updatePhaseUI();}
 function updatePhaseUI(){
   const bar=document.getElementById('phase-bar');
+  const badge=document.getElementById('cp-badge');
   if(currentPhase==='serve'){
     bar.className='phase-bar phase-serve';
     bar.textContent=`🎾 SAQUE ${serveAttempt}ª`;
-    document.getElementById('cp-badge').className='badge badge-srv';
-    document.getElementById('cp-badge').textContent=serveAttempt===1?'1º Saque':'2º Saque';
+    badge.className='badge badge-srv';
+    badge.textContent=serveAttempt===1?'1º Saque':'2º Saque';
   } else {
     bar.className='phase-bar phase-rally';
     bar.textContent='🏃 EM JOGO';
-    document.getElementById('cp-badge').className='badge badge-rly';
-    document.getElementById('cp-badge').textContent='Em jogo';
+    badge.className='badge badge-rly';badge.textContent='Em jogo';
   }
 }
+function reCal(){stopDetection();cancelAnimationFrame(calAnimId);startCal();}
 
-/* ═══════════════════════════════════════
-   INDICADORES VISUAIS
-═══════════════════════════════════════ */
-function showMarker(x,y,type){
-  marker.style.left=x+'px'; marker.style.top=y+'px';
-  marker.className=type;
+/* ═══ MARCADOR ═══ */
+function showMarker(x,y,t){
+  marker.style.left=x+'px';marker.style.top=y+'px';
+  marker.className=t;
   clearTimeout(marker._t);
-  marker._t=setTimeout(()=>marker.className='',type==='in'?3000:1600);
+  marker._t=setTimeout(()=>marker.className='',t==='in'?3000:1600);
 }
 
-/* ═══════════════════════════════════════
-   FRAME DE REVISÃO
-═══════════════════════════════════════ */
-let lastRevLabel='', lastRevTime=null;
-function captureFrame(label){
+/* ═══ REVISÃO ═══ */
+let lastRevLabel='',lastRevTime=null;
+function captureFrame(lbl){
   const rc=document.getElementById('rev-canvas');
-  rc.width=canvas.width; rc.height=canvas.height;
+  rc.width=canvas.width;rc.height=canvas.height;
   const rctx=rc.getContext('2d');
   rctx.drawImage(video,0,0,rc.width,rc.height);
-  if(calibrated) rctx.drawImage(canvas,0,0);
-  lastRevLabel=label; lastRevTime=Date.now();
+  rctx.drawImage(canvas,0,0);
+  lastRevLabel=lbl;lastRevTime=Date.now();
 }
 function openReview(){
   document.getElementById('rev-title').textContent='Conferência — '+lastRevLabel;
@@ -953,11 +944,8 @@ function openReview(){
   showScreen('sc-review');
 }
 
-/* ═══════════════════════════════════════
-   INIT
-═══════════════════════════════════════ */
-selPost('A');
-selMode('singles');
+/* ═══ INIT ═══ */
+selPost('A');selMode('singles');
 </script>
 </body>
 </html>
