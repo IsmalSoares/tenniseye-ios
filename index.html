@@ -205,6 +205,14 @@ input[type=range]{width:100%;height:20px}
     <!-- JOGO -->
     <div id="ui-game" style="display:none;flex-direction:column;gap:6px">
       <div class="phase-bar phase-serve" id="phase-bar">🎾 SAQUE 1ª</div>
+      <div class="slider-row" style="background:var(--sur1);padding:5px 7px;border-radius:7px">
+        <span class="slider-lbl">Lado do saque: <b id="serve-side-txt" style="color:var(--amber)">Deuce (dir)</b></span>
+        <div class="cpbtn-row" style="margin-top:3px">
+          <button class="cpbtn cpbtn-sm" onclick="setServeSide('deuce')">Deuce</button>
+          <button class="cpbtn cpbtn-sm" onclick="setServeSide('ad')">Ad</button>
+        </div>
+        <button class="cpbtn cpbtn-sm" style="margin-top:3px" onclick="flipServeBox()">⇄ Inverter box</button>
+      </div>
       <div class="mic-status"><div class="mic-dot on" id="mic-dot2"></div><div class="mic-txt">Ouvindo quique</div></div>
       <div class="mic-meter"><div class="mic-meter-fill" id="mic-meter2"></div></div>
       <div class="cpbtn-row">
@@ -244,6 +252,13 @@ const hl=L/2,hwd=Wd/2,hws=Ws/2;
 
 let myPost='A',matchMode='singles';
 let gameRunning=false,currentPhase='serve',serveAttempt=1;
+/* Saque diagonal: alterna a cada ponto.
+   serveSide 'deuce' (direita do sacador) → saque cai no box "par" da metade julgada
+   serveSide 'ad'    (esquerda do sacador) → saque cai no box "ímpar"
+   Como cada câmera julga a metade oposta, o box esperado é o que fica
+   do lado correspondente. O usuário pode inverter se sair de sincronia. */
+let serveSide='deuce'; // alterna deuce↔ad a cada ponto
+let expectedBoxFlip=false; // correção manual caso a orientação esteja invertida
 let H=null,Hinv=null,calibrated=false;
 let calAnimId=null;
 const WORLD_CORNERS=[[0,0],[L,0],[L,hws],[0,hws]];
@@ -350,6 +365,27 @@ function w2p(u,v){if(!H)return null;const w=H[2][0]*u+H[2][1]*v+H[2][2];
 function p2w(x,y){if(!Hinv)return null;const w=Hinv[2][0]*x+Hinv[2][1]*y+Hinv[2][2];
   return{u:(Hinv[0][0]*x+Hinv[0][1]*y+Hinv[0][2])/w,v:(Hinv[1][0]*x+Hinv[1][1]*y+Hinv[1][2])/w};}
 
+/* Box de saque esperado conforme o lado (deuce/ad).
+   A metade julgada tem 2 boxes divididos pela linha central de saque (v=hws/2):
+   - box "near-center": v de 0 a hws/2 (colado na linha central da quadra)
+   - box "near-side":   v de hws/2 a hws (colado na linha de simples)
+   O comprimento do box vai da rede (u=hl) até a linha de saque.
+   Como a câmera julga um lado da rede, usamos o box entre a rede e a linha de saque
+   do lado que aparece na imagem. Assumimos o box próximo à rede: u de hl a hl-SVC
+   (ou hl a hl+SVC — ambos são desenhados; o relevante é a metade em v).
+   A diagonal: deuce → um box, ad → o outro. Flip corrige orientação. */
+function expectedServeBox(){
+  if(!H) return null;
+  // qual metade em v: deuce vs ad (com correção de flip)
+  let nearCenter = (serveSide==='deuce');
+  if(expectedBoxFlip) nearCenter=!nearCenter;
+  const v0 = nearCenter ? 0 : hws/2;
+  const v1 = nearCenter ? hws/2 : hws;
+  // box cobre TODO o comprimento da área de saque dos dois lados da rede
+  // (a bola pode cair em qualquer um dos boxes de saque em u, mas só na metade v correta)
+  return {u0:hl-SVC, u1:hl+SVC, v0, v1};
+}
+
 /* ═══ ALÇAS ═══ */
 function canvasToScreen(cx,cy){return{x:cx*(video.clientWidth/canvas.width),y:cy*(video.clientHeight/canvas.height)};}
 function screenToCanvas(sx,sy){return{x:sx*(canvas.width/video.clientWidth),y:sy*(canvas.height/video.clientHeight)};}
@@ -388,9 +424,29 @@ function drawGrid(context){
   // Contorno principal
   line(0,0,L,0,green,2.5);line(0,hws,L,hws,green,2.5);
   line(0,0,0,vDup,green,2.5);line(L,0,L,vDup,green,2.5);
-  // Saque
+  // Saque — linhas dos dois boxes
   line(hl-SVC,0,hl-SVC,hws,'rgba(234,179,8,.95)',2);
   line(hl+SVC,0,hl+SVC,hws,'rgba(234,179,8,.95)',2);
+  // Linha central de saque (divide os dois boxes da metade julgada)
+  line(hl-SVC,hws/2,hl+SVC,hws/2,'rgba(234,179,8,.7)',1.5);
+  // Destaque do BOX ESPERADO durante o saque
+  if(gameRunning&&currentPhase==='serve'){
+    const box=expectedServeBox();
+    if(box){
+      const a=w2p(box.u0,box.v0),b2=w2p(box.u1,box.v0),
+            cc=w2p(box.u1,box.v1),d=w2p(box.u0,box.v1);
+      if(a&&b2&&cc&&d){
+        c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b2.x,b2.y);
+        c.lineTo(cc.x,cc.y);c.lineTo(d.x,d.y);c.closePath();
+        c.fillStyle='rgba(234,179,8,.22)';c.fill();
+        c.strokeStyle='rgba(234,179,8,1)';c.lineWidth=2.5;c.stroke();
+        // rótulo
+        const mx=(a.x+cc.x)/2,my=(a.y+cc.y)/2;
+        c.fillStyle='rgba(234,179,8,1)';c.font='bold 13px sans-serif';c.textAlign='center';
+        c.fillText('SAQUE AQUI',mx,my);c.textAlign='left';
+      }
+    }
+  }
   // Rede
   line(hl,0,hl,vDup,'rgba(255,255,255,.55)',1.5,[8,5]);
   // Duplas
@@ -460,7 +516,8 @@ function monitorMic(){
 /* ═══ JOGO ═══ */
 function startGame(){
   gameRunning=true;currentPhase='serve';serveAttempt=1;frozen=false;
-  showPanel('ui-game');updatePhaseUI();
+  serveSide='deuce';
+  showPanel('ui-game');updatePhaseUI();updateServeSideUI();
   setInfo('ok','Ouvindo o quique.\nPode jogar!');
   speak('Jogo iniciado');toast('▶ Jogo iniciado');
   if(!micActive)initMic();
@@ -468,8 +525,13 @@ function startGame(){
 function stopGame(){gameRunning=false;showPanel('ui-pregame');
   setInfo('ok','Jogo parado.');toast('⏸ Parado');}
 function resetServe(){currentPhase='serve';serveAttempt=1;updatePhaseUI();}
+function updateServeSideUI(){
+  const el=document.getElementById('serve-side-txt');
+  if(el) el.textContent=serveSide==='deuce'?'Deuce (dir)':'Ad (esq)';
+}
 function updatePhaseUI(){
   const bar=document.getElementById('phase-bar'),badge=document.getElementById('cp-badge');
+  updateServeSideUI();
   if(currentPhase==='serve'){bar.className='phase-bar phase-serve';bar.textContent=`🎾 SAQUE ${serveAttempt}ª`;
     badge.className='badge badge-srv';badge.textContent=serveAttempt===1?'1º Saque':'2º Saque';}
   else{bar.className='phase-bar phase-rally';bar.textContent='🏃 EM JOGO';
@@ -509,8 +571,10 @@ document.getElementById('cam-area').addEventListener('click',e=>{
   const {u,v}=wpt;
   const vMax=matchMode==='doubles'?hwd:hws;
   let valid;
-  if(currentPhase==='serve') valid=(u>=hl-SVC&&u<=hl+SVC&&v>=0&&v<=hws);
-  else valid=(u>=0&&u<=L&&v>=0&&v<=vMax);
+  if(currentPhase==='serve'){
+    const box=expectedServeBox();
+    valid = box && u>=box.u0 && u<=box.u1 && v>=box.v0 && v<=box.v1;
+  } else valid=(u>=0&&u<=L&&v>=0&&v<=vMax);
   // marcador visual no ponto tocado
   const mk=document.getElementById('tap-marker');
   mk.style.left=sx+'px';mk.style.top=sy+'px';mk.className=valid?'in':'out';
@@ -523,14 +587,29 @@ function callResult(res,fromTap){
     speak('Out');showBanner('OUT','#ef4444');
     if(currentPhase==='serve'){
       if(serveAttempt===1){serveAttempt=2;toast('🔴 Falta — 2º saque');}
-      else{toast('🔴 Dupla falta');serveAttempt=1;}
-    }else toast('🔴 OUT — ponto encerrado');
+      else{toast('🔴 Dupla falta');serveAttempt=1;nextPoint();}
+    }else{toast('🔴 OUT — ponto encerrado');nextPoint();}
   }else{
     showBanner('IN','#22c55e');
     if(currentPhase==='serve'){currentPhase='rally';toast('🟢 Saque bom — em jogo');}
     else toast('🟢 IN');
   }
   setTimeout(()=>resumeGame(),res==='out'?1200:800);
+}
+
+/* Ao encerrar um ponto, alterna o lado do saque (deuce ↔ ad) */
+function nextPoint(){
+  currentPhase='serve';serveAttempt=1;
+  serveSide = serveSide==='deuce' ? 'ad' : 'deuce';
+  toast('Próximo saque: '+(serveSide==='deuce'?'lado direito (deuce)':'lado esquerdo (ad)'),2500);
+}
+function flipServeBox(){
+  expectedBoxFlip=!expectedBoxFlip;
+  toast('Box de saque invertido');
+}
+function setServeSide(side){
+  serveSide=side;
+  updateServeSideUI();
 }
 
 function resumeGame(){
