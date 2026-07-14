@@ -41,19 +41,19 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
 .ae{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
 
 /* ══ CÂMERA — LAYOUT VERTICAL: vídeo em cima, controles embaixo com scroll ══ */
-#cam-screen{padding:0;background:#000;display:flex;flex-direction:column;overflow:hidden}
+#cam-screen{padding:0;background:#000;display:flex;flex-direction:column;overflow:hidden;height:100vh;height:100dvh}
 #cam-screen.off{display:none!important}
 
-/* Área de vídeo — usa a largura TOTAL. Altura fixa deixando espaço para controles */
-#cam-area{position:relative;width:100%;height:62vh;min-height:280px;flex-shrink:0;overflow:hidden;background:#000}
+/* Área de vídeo — largura total. Em paisagem reduz para dar espaço aos controles */
+#cam-area{position:relative;width:100%;height:55vh;min-height:220px;max-height:60vh;flex-shrink:0;overflow:hidden;background:#000}
 #cam-video,#cam-canvas,#freeze-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #cam-canvas{z-index:5;pointer-events:none}
 #freeze-canvas{z-index:6;display:none}#freeze-canvas.show{display:block}
 
-/* Faixa de controles — embaixo, com scroll próprio */
-#ctrl-strip{flex:1;width:100%;background:#0a0a0a;border-top:1px solid var(--brd);
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:10px 12px max(env(safe-area-inset-bottom,12px),12px);
+/* Faixa de controles — embaixo, com scroll próprio garantido */
+#ctrl-strip{flex:1 1 auto;width:100%;background:#0a0a0a;border-top:1px solid var(--brd);
+  overflow-y:scroll;-webkit-overflow-scrolling:touch;min-height:0;
+  padding:10px 12px calc(max(env(safe-area-inset-bottom,12px),12px) + 20px);
   display:flex;flex-direction:column;gap:8px}
 
 /* Barra superior fixa sobre o vídeo (mínima) */
@@ -182,15 +182,15 @@ input[type=range]{width:100%;height:26px}
       <div class="badge badge-cal" id="cp-badge">Calibrar</div>
     </div>
     <!-- Alças do mapa da quadra (vermelho) -->
-    <div class="handle" id="hc0"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo B·central</div></div>
-    <div class="handle" id="hc1"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo A·central</div></div>
-    <div class="handle" id="hc2"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo A·lateral</div></div>
-    <div class="handle" id="hc3"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo B·lateral</div></div>
+    <div class="handle" id="hc0"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Rede·esq</div></div>
+    <div class="handle" id="hc1"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Rede·dir</div></div>
+    <div class="handle" id="hc2"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo·dir</div></div>
+    <div class="handle" id="hc3"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo·esq</div></div>
     <!-- Alças do mapa de saque (amarelo) -->
-    <div class="handle svc" id="hs0"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·rede·centro</div></div>
-    <div class="handle svc" id="hs1"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·linha·centro</div></div>
-    <div class="handle svc" id="hs2"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·linha·lateral</div></div>
-    <div class="handle svc" id="hs3"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·rede·lateral</div></div>
+    <div class="handle svc" id="hs0"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Rede·esq</div></div>
+    <div class="handle svc" id="hs1"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Rede·dir</div></div>
+    <div class="handle svc" id="hs2"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·dir</div></div>
+    <div class="handle svc" id="hs3"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·esq</div></div>
     <div id="tap-hint">Toque onde a bola quicou</div>
     <div id="tap-marker"></div>
     <div id="banner"><span id="banner-txt"></span></div>
@@ -313,8 +313,42 @@ let calAnimId=null;
      mundo local próprio: u=0..(2*SVC) mapeando de hl-SVC a hl+SVC
      v=0 (central)..hws (simples)
      cantos nos 4 vértices da área de saque: rede-centro, linha-centro, linha-lateral, rede-lateral */
-const COURT_CORNERS=[[0,0],[L,0],[L,hws],[0,hws]];
-const SVC_CORNERS=[[hl-SVC,0],[hl+SVC,0],[hl+SVC,hws],[hl-SVC,hws]];
+/* ═══ SISTEMA DE COORDENADAS REAIS (metros) ═══
+   x = comprimento (0..L), rede em x=hl. y = largura (0..Wd).
+   Linhas de simples: y=ySl (1.37) e y=ySr (9.60). Duplas: y=0 e y=Wd.
+   Linha de saque: x=hl-SVC e x=hl+SVC.
+
+   Câmera A fica no fundo x=0, julga a metade OPOSTA (x de hl a L).
+   Câmera B fica no fundo x=L, julga a metade OPOSTA (x de 0 a hl).
+
+   Cada mapa tem 4 cantos em coords reais. A homografia converte
+   ponto-de-quique (pixels) → metros, e o julgamento compara com as linhas oficiais. */
+const ySl=(Wd-Ws)/2;   // 1.37 — linha de simples "esquerda"
+const ySr=Wd-ySl;      // 9.60 — linha de simples "direita"
+
+/* Cantos de cada mapa conforme a câmera (metade oposta que ela julga).
+   Ordem dos cantos: [perto-esq, perto-dir, longe-dir, longe-esq]
+   "perto" = rede (x=hl), "longe" = fundo oposto. */
+function mapCorners(which){
+  const A=(myPost==='A');
+  const xFar = A ? L : 0;          // fundo oposto
+  const xNet = hl;                 // rede (perto da câmera)
+  const xSvcFar = A ? hl+SVC : hl-SVC; // linha de saque do lado oposto
+  if(which==='svc'){
+    // Área de saque da metade oposta: da rede até a linha de saque oposta
+    // cantos: rede×simplesEsq, rede×simplesDir, saque×simplesDir, saque×simplesEsq
+    return [[xNet,ySl],[xNet,ySr],[xSvcFar,ySr],[xSvcFar,ySl]];
+  }
+  if(which==='court'){
+    // Limite de simples: da rede até o fundo oposto, largura de simples
+    return [[xNet,ySl],[xNet,ySr],[xFar,ySr],[xFar,ySl]];
+  }
+  // duplas: da rede até o fundo oposto, largura total
+  return [[xNet,0],[xNet,Wd],[xFar,Wd],[xFar,0]];
+}
+let COURT_CORNERS=mapCorners('court');
+let SVC_CORNERS=mapCorners('svc');
+let DUP_CORNERS=mapCorners('dup');
 
 let courtH=null,courtHinv=null;
 let svcH=null,svcHinv=null;
@@ -345,9 +379,14 @@ function showPanel(id){['ui-calib','ui-pregame','ui-game','ui-freeze'].forEach(p
 function selPost(p){myPost=p;['a','b'].forEach(x=>{
   document.getElementById('post-'+x).classList.toggle('sel',x===p.toLowerCase());
   document.getElementById('pname-'+x).style.color=x===p.toLowerCase()?(p==='A'?'#f97316':'#3b9eff'):'';});
-  const tag=document.getElementById('cp-tag');tag.textContent=p;tag.className='cptag '+(p==='A'?'tag-a':'tag-b');}
+  const tag=document.getElementById('cp-tag');tag.textContent=p;tag.className='cptag '+(p==='A'?'tag-a':'tag-b');
+  refreshCorners();}
 function selMode(m){matchMode=m;document.getElementById('mode-s').classList.toggle('sel',m==='singles');
-  document.getElementById('mode-d').classList.toggle('sel',m==='doubles');}
+  document.getElementById('mode-d').classList.toggle('sel',m==='doubles');
+  refreshCorners();}
+function refreshCorners(){
+  COURT_CORNERS=mapCorners('court');SVC_CORNERS=mapCorners('svc');DUP_CORNERS=mapCorners('dup');
+}
 
 async function checkCam(){try{const devs=await navigator.mediaDevices.enumerateDevices();
   const ok=devs.some(d=>d.kind==='videoinput');const el=document.getElementById('cam-status');
@@ -371,6 +410,7 @@ async function openCam(){showScreen('cam-screen');
 /* ═══ CALIBRAÇÃO ═══ */
 function startCal(){
   calibrated=false;frozen=false;activeMap='court';
+  refreshCorners();
   showPanel('ui-calib');
   document.getElementById('cp-badge').textContent='Calibrar';
   document.getElementById('cp-badge').className='badge badge-cal';
@@ -412,7 +452,9 @@ function computeH(corners,handles){
   const hh=solve8(A,b);if(!hh)return null;
   return [[hh[0],hh[1],hh[2]],[hh[3],hh[4],hh[5]],[hh[6],hh[7],1]];
 }
-function computeCourtH(){courtH=computeH(COURT_CORNERS,courtHandles);courtHinv=courtH?invert3(courtH):null;}
+function computeCourtH(){
+  const corners = matchMode==='doubles' ? DUP_CORNERS : COURT_CORNERS;
+  courtH=computeH(corners,courtHandles);courtHinv=courtH?invert3(courtH):null;}
 function computeSvcH(){svcH=computeH(SVC_CORNERS,svcHandles);svcHinv=svcH?invert3(svcH):null;}
 
 function solve8(A,b){const n=8,M=A.map((r,i)=>[...r,b[i]]);
@@ -467,52 +509,61 @@ function resetActiveMap(){
   }
 });
 
-/* ═══ DESENHO ═══ */
+/* ═══ DESENHO ═══
+   As homografias mapeiam METROS REAIS → pixels.
+   courtH usa COURT_CORNERS (limite simples/duplas da metade oposta).
+   svcH usa SVC_CORNERS (área de saque da metade oposta).
+   Desenhamos as linhas nos seus x,y reais em metros. */
 function drawGrid(context){
   const c=context||ctx;
   const density=parseInt(document.getElementById('grid-density').value||2);
-  const vDup=matchMode==='doubles'?hwd:hws;
-  function cline(u1,v1,u2,v2,col,w,dash){const a=courtW2P(u1,v1),b=courtW2P(u2,v2);if(!a||!b)return;
+  const A=(myPost==='A');
+  const xFar=A?L:0, xNet=hl, xSvcFar=A?hl+SVC:hl-SVC;
+  const vDup=matchMode==='doubles';
+  function cline(x1,y1,x2,y2,col,w,dash){const a=courtW2P(x1,y1),b=courtW2P(x2,y2);if(!a||!b)return;
     c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.stroke();c.setLineDash([]);}
-  function sline(u1,v1,u2,v2,col,w,dash){const a=svcW2P(u1,v1),b=svcW2P(u2,v2);if(!a||!b)return;
+  function sline(x1,y1,x2,y2,col,w,dash){const a=svcW2P(x1,y1),b=svcW2P(x2,y2);if(!a||!b)return;
     c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.stroke();c.setLineDash([]);}
 
-  // ── MAPA QUADRA (vermelho) ──
+  // ── MAPA QUADRA (vermelho=simples, roxo=duplas) ──
   if(courtH){
-    const dim='rgba(239,68,68,.3)';
-    const stepU=density===1?4:density===2?2:density===3?1:0.5;
-    for(let u=0;u<=L+.01;u+=stepU)cline(u,0,u,vDup,dim,.6,[3,4]);
-    const stepV=density>=3?0.5:1;
-    for(let v=0;v<=vDup+.01;v+=stepV)cline(0,v,L,v,dim,.6,[3,4]);
-    const main=activeMap==='court'?'rgba(239,68,68,1)':'rgba(239,68,68,.55)';
+    const yOuter0=vDup?0:ySl, yOuter1=vDup?Wd:ySr;
+    const main=activeMap==='court'?(vDup?'rgba(168,85,247,1)':'rgba(239,68,68,1)'):'rgba(239,68,68,.5)';
     const lw=activeMap==='court'?2.5:1.5;
-    cline(0,0,L,0,main,lw);cline(0,hws,L,hws,main,lw);
-    cline(0,0,0,vDup,main,lw);cline(L,0,L,vDup,main,lw);
-    cline(hl,0,hl,vDup,'rgba(255,255,255,.5)',1.3,[8,5]); // rede
-    if(matchMode==='doubles'){cline(0,hwd,L,hwd,'rgba(168,85,247,.85)',1.8);
-      cline(0,hws,0,hwd,'rgba(168,85,247,.85)',1.8);cline(L,hws,L,hwd,'rgba(168,85,247,.85)',1.8);}
+    const dim=vDup?'rgba(168,85,247,.3)':'rgba(239,68,68,.3)';
+    // grade interna densa (ao longo do comprimento x, e na largura y)
+    const stepX=density===1?4:density===2?2:density===3?1:0.5;
+    const xMin=Math.min(xNet,xFar),xMax=Math.max(xNet,xFar);
+    for(let x=xMin;x<=xMax+.01;x+=stepX)cline(x,yOuter0,x,yOuter1,dim,.6,[3,4]);
+    const stepY=density>=3?0.5:1;
+    for(let y=yOuter0;y<=yOuter1+.01;y+=stepY)cline(xMin,y,xMax,y,dim,.6,[3,4]);
+    // contorno: rede (perto) até fundo oposto (longe)
+    cline(xNet,yOuter0,xFar,yOuter0,main,lw);   // lateral esq
+    cline(xNet,yOuter1,xFar,yOuter1,main,lw);   // lateral dir
+    cline(xFar,yOuter0,xFar,yOuter1,main,lw);   // fundo oposto (longe)
+    cline(xNet,yOuter0,xNet,yOuter1,'rgba(255,255,255,.6)',1.5,[8,5]); // rede (perto)
   }
-  // ── MAPA SAQUE (amarelo) — homografia própria ──
+  // ── MAPA SAQUE (amarelo) ──
   if(svcH){
-    const main=activeMap==='svc'?'rgba(234,179,8,1)':'rgba(234,179,8,.55)';
+    const main=activeMap==='svc'?'rgba(234,179,8,1)':'rgba(234,179,8,.5)';
     const lw=activeMap==='svc'?2.5:1.5;
-    // contorno da área de saque (mundo local: u de hl-SVC a hl+SVC, v de 0 a hws)
-    sline(hl-SVC,0,hl+SVC,0,main,lw);sline(hl-SVC,hws,hl+SVC,hws,main,lw);
-    sline(hl-SVC,0,hl-SVC,hws,main,lw);sline(hl+SVC,0,hl+SVC,hws,main,lw);
-    // linha central de saque (divide os dois boxes)
-    sline(hl-SVC,hws/2,hl+SVC,hws/2,main,lw*.8);
-    // linha da rede no meio
-    sline(hl,0,hl,hws,'rgba(255,255,255,.5)',1.2,[6,4]);
-    // grade interna do saque quando ativo
+    // box de saque da metade oposta: da rede (xNet) até linha de saque oposta (xSvcFar)
+    sline(xNet,ySl,xSvcFar,ySl,main,lw);        // lateral simples esq
+    sline(xNet,ySr,xSvcFar,ySr,main,lw);        // lateral simples dir
+    sline(xSvcFar,ySl,xSvcFar,ySr,main,lw);     // linha de saque (longe)
+    sline(xNet,ySl,xNet,ySr,'rgba(255,255,255,.6)',1.3,[6,4]); // rede (perto)
+    // linha central de saque divide os dois boxes (deuce/ad)
+    sline(xNet,hwd,xSvcFar,hwd,main,lw*.8);
     if(activeMap==='svc'){
       const dim='rgba(234,179,8,.3)';
-      for(let u=hl-SVC;u<=hl+SVC+.01;u+=1)sline(u,0,u,hws,dim,.5,[2,3]);
-      for(let v=0;v<=hws+.01;v+=0.5)sline(hl-SVC,v,hl+SVC,v,dim,.5,[2,3]);
+      const xa=Math.min(xNet,xSvcFar),xb=Math.max(xNet,xSvcFar);
+      for(let x=xa;x<=xb+.01;x+=1)sline(x,ySl,x,ySr,dim,.5,[2,3]);
+      for(let y=ySl;y<=ySr+.01;y+=0.5)sline(xa,y,xb,y,dim,.5,[2,3]);
     }
-    // destaque do box esperado no jogo
+    // destaque do box de saque esperado no jogo
     if(gameRunning&&currentPhase==='serve'){
       const box=expectedServeBox();
-      if(box){const a=svcW2P(box.u0,box.v0),b2=svcW2P(box.u1,box.v0),cc=svcW2P(box.u1,box.v1),d=svcW2P(box.u0,box.v1);
+      if(box){const a=svcW2P(box.x0,box.y0),b2=svcW2P(box.x1,box.y0),cc=svcW2P(box.x1,box.y1),d=svcW2P(box.x0,box.y1);
         if(a&&b2&&cc&&d){c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b2.x,b2.y);c.lineTo(cc.x,cc.y);c.lineTo(d.x,d.y);c.closePath();
           c.fillStyle='rgba(234,179,8,.22)';c.fill();c.strokeStyle='rgba(234,179,8,1)';c.lineWidth=2.5;c.stroke();
           const mx=(a.x+cc.x)/2,my=(a.y+cc.y)/2;c.fillStyle='rgba(234,179,8,1)';c.font='bold 13px sans-serif';c.textAlign='center';
@@ -537,10 +588,16 @@ function backToCalib(){calibrated=false;showPanel('ui-calib');switchMap(activeMa
 /* Box de saque esperado (no sistema de coordenadas do mapa SVC) */
 function expectedServeBox(){
   if(!svcH)return null;
-  let nearCenter=(serveSide==='deuce');
-  if(expectedBoxFlip)nearCenter=!nearCenter;
-  const v0=nearCenter?0:hws/2,v1=nearCenter?hws/2:hws;
-  return {u0:hl-SVC,u1:hl+SVC,v0,v1};
+  const A=(myPost==='A');
+  const xNet=hl, xSvcFar=A?hl+SVC:hl-SVC;
+  const x0=Math.min(xNet,xSvcFar), x1=Math.max(xNet,xSvcFar);
+  /* O box de saque válido é o DIAGONAL. A metade oposta tem 2 boxes,
+     divididos pela linha central da quadra (y=hwd):
+     box "esq": y de ySl a hwd | box "dir": y de hwd a ySr */
+  let leftBox=(serveSide==='deuce');
+  if(expectedBoxFlip) leftBox=!leftBox;
+  const y0=leftBox?ySl:hwd, y1=leftBox?hwd:ySr;
+  return {x0,x1,y0,y1};
 }
 
 /* ═══ ÁUDIO ═══ */
@@ -592,22 +649,26 @@ function freezeFrame(){frozen=true;cancelAnimationFrame(calAnimId);
   document.getElementById('tap-hint').classList.add('show');
   setInfo('warn','Toque onde a bola caiu\nou use IN/OUT');}
 
-/* Toque no frame congelado → decide qual mapa usar conforme a fase */
+/* Toque no frame congelado → converte pixel→metros reais → julga IN/OUT */
 document.getElementById('cam-area').addEventListener('click',e=>{
   if(!frozen)return;
   const rect=document.getElementById('cam-area').getBoundingClientRect();
   const c=screenToCanvas(e.clientX-rect.left,e.clientY-rect.top);
   let valid;
   if(currentPhase==='serve'){
-    // usa mapa de SAQUE
-    const wpt=svcP2W(c.x,c.y);if(!wpt)return;const{u,v}=wpt;
+    // mapa de SAQUE → coords reais (x,y) em metros
+    const wpt=svcP2W(c.x,c.y);if(!wpt)return;const x=wpt.u,y=wpt.v;
     const box=expectedServeBox();
-    valid=box&&u>=box.u0&&u<=box.u1&&v>=box.v0&&v<=box.v1;
+    const bx0=Math.min(box.x0,box.x1),bx1=Math.max(box.x0,box.x1);
+    valid=box&&x>=bx0&&x<=bx1&&y>=box.y0&&y<=box.y1;
   }else{
-    // usa mapa da QUADRA
-    const wpt=courtP2Wpt(c.x,c.y);if(!wpt)return;const{u,v}=wpt;
-    const vMax=matchMode==='doubles'?hwd:hws;
-    valid=(u>=0&&u<=L&&v>=0&&v<=vMax);
+    // mapa da QUADRA → coords reais (x,y) em metros
+    const wpt=courtP2Wpt(c.x,c.y);if(!wpt)return;const x=wpt.u,y=wpt.v;
+    const A=(myPost==='A');
+    const xNet=hl, xFar=A?L:0;
+    const bx0=Math.min(xNet,xFar),bx1=Math.max(xNet,xFar);
+    const yMin=matchMode==='doubles'?0:ySl, yMax=matchMode==='doubles'?Wd:ySr;
+    valid=(x>=bx0&&x<=bx1&&y>=yMin&&y<=yMax);
   }
   const mk=document.getElementById('tap-marker');
   mk.style.left=(e.clientX-rect.left)+'px';mk.style.top=(e.clientY-rect.top)+'px';mk.className=valid?'in':'out';
