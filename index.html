@@ -7,16 +7,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --green:#22c55e;--red:#ef4444;--amber:#eab308;--blue:#3b82f6;
+  --green:#22c55e;--red:#ef4444;--amber:#eab308;--blue:#3b82f6;--purple:#a855f7;
   --accent:#c8f53a;--white:#fff;
   --sur1:rgba(255,255,255,.06);--sur2:rgba(255,255,255,.10);
   --brd:rgba(255,255,255,.13);--txt:rgba(255,255,255,.92);--muted:rgba(255,255,255,.45);
 }
 html,body{width:100%;height:100%;background:#000;color:var(--txt);
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  overflow:hidden;touch-action:manipulation}
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;touch-action:manipulation}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:max(env(safe-area-inset-top,12px),12px) 14px max(env(safe-area-inset-bottom,12px),12px);
   gap:10px;background:#0a0a0a;z-index:10}
 .screen.off{display:none!important}
@@ -28,8 +26,7 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
 .pcard{padding:12px 8px;border-radius:11px;border:1.5px solid var(--brd);background:var(--sur1);
   display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
 .pcard.sel{border-color:var(--accent);background:rgba(200,245,58,.07)}
-.pcard .pname{font-size:12px;font-weight:600}
-.pcard .pdesc{font-size:10px;color:var(--muted);text-align:center;line-height:1.3}
+.pcard .pname{font-size:12px;font-weight:600}.pcard .pdesc{font-size:10px;color:var(--muted);text-align:center;line-height:1.3}
 .mcard{padding:9px 8px;border-radius:10px;border:1.5px solid var(--brd);background:var(--sur1);cursor:pointer;text-align:center}
 .mcard.sel{border-color:var(--blue);background:rgba(59,130,246,.1)}
 .mcard .mt{font-size:12px;font-weight:600}.mcard.sel .mt{color:var(--blue)}
@@ -43,83 +40,105 @@ html,body{width:100%;height:100%;background:#000;color:var(--txt);
 .ao{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#22c55e}
 .ae{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
 
-#cam-screen{padding:0;background:#000;display:grid;grid-template-columns:1fr auto}
+/* ══ CÂMERA — LAYOUT VERTICAL: vídeo em cima, controles embaixo com scroll ══ */
+#cam-screen{padding:0;background:#000;display:flex;flex-direction:column;overflow:hidden}
 #cam-screen.off{display:none!important}
-#cam-area{position:relative;width:100%;height:100%;overflow:hidden}
+
+/* Área de vídeo — usa a largura TOTAL. Altura fixa deixando espaço para controles */
+#cam-area{position:relative;width:100%;height:62vh;min-height:280px;flex-shrink:0;overflow:hidden;background:#000}
 #cam-video,#cam-canvas,#freeze-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #cam-canvas{z-index:5;pointer-events:none}
-#freeze-canvas{z-index:6;display:none;object-fit:cover}
-#freeze-canvas.show{display:block}
+#freeze-canvas{z-index:6;display:none}#freeze-canvas.show{display:block}
 
-#ctrl-panel{width:160px;min-width:150px;height:100vh;background:rgba(0,0,0,.88);
-  border-left:1px solid var(--brd);display:flex;flex-direction:column;
-  padding:max(env(safe-area-inset-top,8px),8px) 10px max(env(safe-area-inset-bottom,8px),8px) 10px;
-  gap:7px;overflow-y:auto;z-index:30}
-.cplogo{font-size:13px;font-weight:800;color:var(--white)}.cplogo span{color:var(--accent)}
+/* Faixa de controles — embaixo, com scroll próprio */
+#ctrl-strip{flex:1;width:100%;background:#0a0a0a;border-top:1px solid var(--brd);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:10px 12px max(env(safe-area-inset-bottom,12px),12px);
+  display:flex;flex-direction:column;gap:8px}
+
+/* Barra superior fixa sobre o vídeo (mínima) */
+#cam-topbar{position:absolute;top:0;left:0;right:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:max(env(safe-area-inset-top,8px),8px) 12px 8px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);pointer-events:none}
+.cplogo{font-size:14px;font-weight:800;color:var(--white)}.cplogo span{color:var(--accent)}
 .cptag{display:inline-block;padding:2px 7px;border-radius:100px;font-size:9px;font-weight:700}
 .tag-a{background:rgba(249,115,22,.2);color:#f97316;border:1px solid rgba(249,115,22,.4)}
 .tag-b{background:rgba(59,158,255,.2);color:#3b9eff;border:1px solid rgba(59,158,255,.4)}
-.badge{padding:2px 8px;border-radius:100px;font-size:9.5px;font-weight:600;border:1px solid;align-self:flex-start}
-.badge-cal{background:rgba(200,245,58,.1);color:var(--accent);border-color:rgba(200,245,58,.3)}
-.badge-srv{background:rgba(234,179,8,.1);color:var(--amber);border-color:rgba(234,179,8,.3)}
-.badge-rly{background:rgba(34,197,94,.1);color:var(--green);border-color:rgba(34,197,94,.3)}
-.divider{height:1px;background:var(--brd);flex-shrink:0}
-.ibar{display:flex;align-items:flex-start;gap:6px}
+.badge{padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;border:1px solid}
+.badge-cal{background:rgba(200,245,58,.12);color:var(--accent);border-color:rgba(200,245,58,.3)}
+.badge-srv{background:rgba(234,179,8,.12);color:var(--amber);border-color:rgba(234,179,8,.3)}
+.badge-rly{background:rgba(34,197,94,.12);color:var(--green);border-color:rgba(34,197,94,.3)}
+
+/* Abas dos dois mapas */
+.map-tabs{display:flex;gap:6px;width:100%}
+.map-tab{flex:1;padding:9px 6px;border-radius:9px;border:1.5px solid var(--brd);background:var(--sur1);
+  cursor:pointer;text-align:center;font-size:11px;font-weight:600;color:var(--muted)}
+.map-tab.active-svc{border-color:var(--amber);background:rgba(234,179,8,.12);color:var(--amber)}
+.map-tab.active-court{border-color:var(--red);background:rgba(239,68,68,.12);color:var(--red)}
+.map-tab .mtn{font-size:9px;font-weight:500;opacity:.7;margin-top:1px}
+
+.ibar{display:flex;align-items:flex-start;gap:6px;padding:8px 10px;background:var(--sur1);border-radius:8px}
 .idot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px;background:#555}
 .idot.ok{background:var(--green)}.idot.warn{background:var(--amber);animation:bl .9s infinite}
 .idot.err{background:var(--red);animation:bl .4s infinite}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
-.itxt{font-size:10px;color:rgba(255,255,255,.7);line-height:1.45;white-space:pre-line}
-.mic-status{display:flex;align-items:center;gap:5px}
-.mic-dot{width:5px;height:5px;border-radius:50%;background:#555}
-.mic-dot.on{background:var(--green);animation:bl 1s infinite}
-.mic-txt{font-size:9.5px;color:var(--muted)}
-.mic-meter{height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-top:2px}
-.mic-meter-fill{height:100%;width:0%;background:var(--green);border-radius:2px}
-.cpbtn{width:100%;padding:9px 7px;border-radius:9px;font-size:11.5px;font-weight:700;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:5px;min-height:36px;line-height:1.2;text-align:center;flex-shrink:0}
-.cpbtn:active{opacity:.7;transform:scale(.97)}
-.cpbtn-confirm{background:var(--accent);color:#0a0a0a}
-.cpbtn-start{background:rgba(200,245,58,.15);border:1.5px solid var(--accent);color:var(--accent)}
-.cpbtn-in{background:var(--green);color:#0a0a0a}
-.cpbtn-out{background:var(--red);color:#fff}
-.cpbtn-sm{background:var(--sur2);color:var(--muted);border:1px solid var(--brd);font-size:10px;font-weight:600;padding:7px 5px;min-height:30px}
-.cpbtn-row{display:flex;gap:5px}.cpbtn-row .cpbtn{flex:1}
-.phase-bar{padding:6px 8px;border-radius:8px;font-size:10.5px;font-weight:600}
-.phase-serve{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);color:var(--amber)}
-.phase-rally{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green)}
-.slider-row{display:flex;flex-direction:column;gap:2px}
-.slider-lbl{font-size:9px;color:var(--muted)}
-input[type=range]{width:100%;height:20px}
+.itxt{font-size:11px;color:rgba(255,255,255,.75);line-height:1.45;white-space:pre-line}
 
-.handle{position:absolute;width:46px;height:46px;z-index:25;transform:translate(-50%,-50%);cursor:grab;touch-action:none;display:none}
+.ctrl-card{background:var(--sur1);border:1px solid var(--brd);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.ctrl-title{font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px}
+.ctrl-title .dot{width:9px;height:9px;border-radius:2px}
+.hint{font-size:10.5px;color:var(--muted);line-height:1.5}
+.slider-row{display:flex;flex-direction:column;gap:2px}
+.slider-lbl{font-size:10px;color:var(--muted)}
+input[type=range]{width:100%;height:26px}
+.cbtn{width:100%;padding:12px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px}
+.cbtn:active{opacity:.8;transform:scale(.98)}
+.cbtn-go{background:var(--accent);color:#0a0a0a}
+.cbtn-start{background:rgba(200,245,58,.15);border:1.5px solid var(--accent);color:var(--accent)}
+.cbtn-in{background:var(--green);color:#0a0a0a}.cbtn-out{background:var(--red);color:#fff}
+.cbtn-sec{background:var(--sur2);color:var(--txt);border:1px solid var(--brd);font-size:12px;min-height:40px}
+.cbtn-row{display:flex;gap:6px}.cbtn-row .cbtn{flex:1}
+.phase-bar{padding:9px 10px;border-radius:9px;font-size:12px;font-weight:600;text-align:center}
+.phase-serve{background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.3);color:var(--amber)}
+.phase-rally{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+.mic-status{display:flex;align-items:center;gap:6px}
+.mic-dot{width:6px;height:6px;border-radius:50%;background:#555}.mic-dot.on{background:var(--green);animation:bl 1s infinite}
+.mic-txt{font-size:10.5px;color:var(--muted)}
+.mic-meter{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;flex:1}
+.mic-meter-fill{height:100%;width:0%;background:var(--green);border-radius:2px}
+.scroll-cue{text-align:center;font-size:10px;color:var(--accent);padding:4px;opacity:.8}
+
+/* Alças */
+.handle{position:absolute;width:48px;height:48px;z-index:25;transform:translate(-50%,-50%);cursor:grab;touch-action:none;display:none}
 .handle.show{display:block}
 .handle-ring{position:absolute;inset:0;border-radius:50%;border:2.5px solid var(--accent);background:rgba(200,245,58,.14)}
-.handle-core{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;background:var(--accent);
+.handle.svc .handle-ring{border-color:var(--amber);background:rgba(234,179,8,.16)}
+.handle-core{position:absolute;left:50%;top:50%;width:11px;height:11px;border-radius:50%;background:var(--accent);
   transform:translate(-50%,-50%);box-shadow:0 0 8px rgba(200,245,58,.7)}
-.handle-lbl{position:absolute;left:50%;top:-15px;transform:translateX(-50%);font-size:8.5px;font-weight:700;
+.handle.svc .handle-core{background:var(--amber);box-shadow:0 0 8px rgba(234,179,8,.7)}
+.handle-lbl{position:absolute;left:50%;top:-16px;transform:translateX(-50%);font-size:8.5px;font-weight:700;
   color:var(--accent);white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.9)}
-.handle.dragging .handle-ring{background:rgba(200,245,58,.28);border-width:3px}
+.handle.svc .handle-lbl{color:var(--amber)}
+.handle.dragging .handle-ring{border-width:3.5px}
 
-#tap-hint{position:absolute;z-index:20;pointer-events:none;opacity:0;transition:opacity .2s;
-  font-size:11px;color:var(--accent);background:rgba(0,0,0,.7);padding:5px 12px;border-radius:100px;
-  left:50%;top:16px;transform:translateX(-50%);white-space:nowrap}
+#tap-hint{position:absolute;z-index:20;pointer-events:none;opacity:0;transition:opacity .2s;font-size:11px;color:var(--accent);
+  background:rgba(0,0,0,.7);padding:5px 12px;border-radius:100px;left:50%;top:52px;transform:translateX(-50%);white-space:nowrap}
 #tap-hint.show{opacity:1}
-#tap-marker{position:absolute;z-index:22;width:24px;height:24px;border-radius:50%;pointer-events:none;
-  opacity:0;transform:translate(-50%,-50%)}
+#tap-marker{position:absolute;z-index:22;width:24px;height:24px;border-radius:50%;pointer-events:none;opacity:0;transform:translate(-50%,-50%)}
 #tap-marker.in{opacity:1;background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.3),0 0 20px rgba(34,197,94,.6)}
 #tap-marker.out{opacity:1;background:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.3),0 0 20px rgba(239,68,68,.6)}
 #banner{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
-#banner.show{opacity:1}#banner span{font-size:60px;font-weight:900}
-#toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(0,0,0,.8);
+#banner.show{opacity:1}#banner span{font-size:56px;font-weight:900}
+#toast{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(0,0,0,.82);
   border:1px solid var(--brd);border-radius:100px;padding:6px 14px;font-size:11px;color:var(--txt);white-space:nowrap;
-  opacity:0;transition:opacity .2s;pointer-events:none;max-width:85%;overflow:hidden;text-overflow:ellipsis}
+  opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1}
 .gs{display:flex;gap:8px;padding:9px;border-radius:9px;background:var(--sur1);border:1px solid var(--brd)}
 .gsn{width:20px;height:20px;border-radius:50%;background:rgba(200,245,58,.15);border:1px solid rgba(200,245,58,.3);
   color:var(--accent);font-size:9.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.gst{font-size:11.5px;font-weight:500;line-height:1.4}
-.gss{font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:2px}
+.gst{font-size:11.5px;font-weight:500;line-height:1.4}.gss{font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:2px}
 </style>
 </head>
 <body>
@@ -153,82 +172,111 @@ input[type=range]{width:100%;height:20px}
 
 <!-- CÂMERA -->
 <div class="screen off" id="cam-screen">
+  <!-- Vídeo (largura total) -->
   <div id="cam-area">
     <video id="cam-video" autoplay playsinline muted></video>
     <canvas id="cam-canvas"></canvas>
     <canvas id="freeze-canvas"></canvas>
-    <div class="handle" id="h0"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo B · central</div></div>
-    <div class="handle" id="h1"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo A · central</div></div>
-    <div class="handle" id="h2"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo A · lateral</div></div>
-    <div class="handle" id="h3"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo B · lateral</div></div>
+    <div id="cam-topbar">
+      <div class="cplogo">Tennis<span>Eye</span> <span class="cptag tag-a" id="cp-tag">A</span></div>
+      <div class="badge badge-cal" id="cp-badge">Calibrar</div>
+    </div>
+    <!-- Alças do mapa da quadra (vermelho) -->
+    <div class="handle" id="hc0"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo B·central</div></div>
+    <div class="handle" id="hc1"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo A·central</div></div>
+    <div class="handle" id="hc2"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo A·lateral</div></div>
+    <div class="handle" id="hc3"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Fundo B·lateral</div></div>
+    <!-- Alças do mapa de saque (amarelo) -->
+    <div class="handle svc" id="hs0"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·rede·centro</div></div>
+    <div class="handle svc" id="hs1"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·linha·centro</div></div>
+    <div class="handle svc" id="hs2"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·linha·lateral</div></div>
+    <div class="handle svc" id="hs3"><div class="handle-ring"></div><div class="handle-core"></div><div class="handle-lbl">Saque·rede·lateral</div></div>
     <div id="tap-hint">Toque onde a bola quicou</div>
     <div id="tap-marker"></div>
     <div id="banner"><span id="banner-txt"></span></div>
     <div id="toast"></div>
   </div>
 
-  <div id="ctrl-panel">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="cplogo">T<span>E</span></div>
-      <span class="cptag tag-a" id="cp-tag">A</span>
-    </div>
-    <div class="badge badge-cal" id="cp-badge">Calibrar</div>
-    <div class="divider"></div>
+  <!-- Controles embaixo com scroll -->
+  <div id="ctrl-strip">
     <div class="ibar"><div class="idot warn" id="idot"></div><div class="itxt" id="itxt">Iniciando...</div></div>
 
-    <!-- CALIBRAÇÃO: malha ajustável -->
-    <div id="ui-adjust" style="display:flex;flex-direction:column;gap:6px">
-      <div class="itxt" style="font-size:9.5px">Arraste as 4 alças até a malha coincidir com as linhas da quadra</div>
-      <div class="slider-row">
-        <span class="slider-lbl">Densidade da grade</span>
-        <input type="range" id="grid-density" min="1" max="4" value="2" step="1" oninput="drawLoop()">
+    <!-- CALIBRAÇÃO: dois mapas -->
+    <div id="ui-calib" style="display:flex;flex-direction:column;gap:8px">
+      <div class="map-tabs">
+        <button class="map-tab active-court" id="tab-court" onclick="switchMap('court')">
+          Limites da quadra<div class="mtn">fundos e laterais</div>
+        </button>
+        <button class="map-tab" id="tab-svc" onclick="switchMap('svc')">
+          Área de saque<div class="mtn">boxes de saque</div>
+        </button>
       </div>
-      <button class="cpbtn cpbtn-confirm" onclick="confirmMap()">✓ Malha alinhada</button>
-      <div class="cpbtn-row">
-        <button class="cpbtn cpbtn-sm" onclick="resetHandles()">⟲ Reset</button>
-        <button class="cpbtn cpbtn-sm" onclick="showScreen('sc-home')">✕ Sair</button>
+
+      <div class="ctrl-card">
+        <div class="ctrl-title" id="map-ctrl-title"><span class="dot" style="background:var(--red)"></span>Ajuste dos limites da quadra</div>
+        <div class="hint" id="map-ctrl-hint">Arraste as 4 alças até o contorno coincidir com as linhas de fundo e laterais. Role a tela para cima para ver as alças no vídeo.</div>
+        <div class="slider-row">
+          <span class="slider-lbl">Densidade da grade</span>
+          <input type="range" id="grid-density" min="1" max="4" value="2" step="1" oninput="drawLoop()">
+        </div>
+        <div class="cbtn-row">
+          <button class="cbtn cbtn-sec" onclick="resetActiveMap()">⟲ Reset deste mapa</button>
+        </div>
       </div>
+
+      <div class="scroll-cue">↑ Role para cima para ajustar as alças no vídeo ↑</div>
+
+      <button class="cbtn cbtn-go" onclick="confirmCalibration()">✓ Confirmar calibração</button>
+      <button class="cbtn cbtn-sec" onclick="showScreen('sc-home')">✕ Sair</button>
     </div>
 
     <!-- PRÉ-JOGO -->
-    <div id="ui-pregame" style="display:none;flex-direction:column;gap:6px">
-      <div class="mic-status"><div class="mic-dot" id="mic-dot"></div><div class="mic-txt" id="mic-txt">Microfone</div></div>
-      <div class="mic-meter"><div class="mic-meter-fill" id="mic-meter"></div></div>
-      <div class="slider-row">
-        <span class="slider-lbl">Sensibilidade do quique</span>
-        <input type="range" id="mic-sens" min="1" max="10" value="6" step="1">
+    <div id="ui-pregame" style="display:none;flex-direction:column;gap:8px">
+      <div class="ctrl-card">
+        <div class="ctrl-title"><span class="dot" style="background:var(--green)"></span>Microfone</div>
+        <div class="mic-status"><div class="mic-dot" id="mic-dot"></div><div class="mic-txt" id="mic-txt">Conectando...</div>
+          <div class="mic-meter"><div class="mic-meter-fill" id="mic-meter"></div></div></div>
+        <div class="slider-row">
+          <span class="slider-lbl">Sensibilidade do quique</span>
+          <input type="range" id="mic-sens" min="1" max="10" value="6" step="1">
+        </div>
       </div>
-      <button class="cpbtn cpbtn-start" onclick="startGame()">▶ Iniciar Jogo</button>
-      <button class="cpbtn cpbtn-sm" onclick="backToAdjust()">✏ Ajustar malha</button>
+      <button class="cbtn cbtn-start" onclick="startGame()">▶ Iniciar Jogo</button>
+      <button class="cbtn cbtn-sec" onclick="backToCalib()">✏ Ajustar mapas</button>
     </div>
 
     <!-- JOGO -->
-    <div id="ui-game" style="display:none;flex-direction:column;gap:6px">
+    <div id="ui-game" style="display:none;flex-direction:column;gap:8px">
       <div class="phase-bar phase-serve" id="phase-bar">🎾 SAQUE 1ª</div>
-      <div class="slider-row" style="background:var(--sur1);padding:5px 7px;border-radius:7px">
-        <span class="slider-lbl">Lado do saque: <b id="serve-side-txt" style="color:var(--amber)">Deuce (dir)</b></span>
-        <div class="cpbtn-row" style="margin-top:3px">
-          <button class="cpbtn cpbtn-sm" onclick="setServeSide('deuce')">Deuce</button>
-          <button class="cpbtn cpbtn-sm" onclick="setServeSide('ad')">Ad</button>
+      <div class="ctrl-card">
+        <div class="ctrl-title"><span class="dot" style="background:var(--amber)"></span>Lado do saque: <span id="serve-side-txt" style="color:var(--amber)">Deuce</span></div>
+        <div class="cbtn-row">
+          <button class="cbtn cbtn-sec" onclick="setServeSide('deuce')">Deuce (dir)</button>
+          <button class="cbtn cbtn-sec" onclick="setServeSide('ad')">Ad (esq)</button>
         </div>
-        <button class="cpbtn cpbtn-sm" style="margin-top:3px" onclick="flipServeBox()">⇄ Inverter box</button>
+        <button class="cbtn cbtn-sec" onclick="flipServeBox()">⇄ Inverter box (corrigir orientação)</button>
       </div>
-      <div class="mic-status"><div class="mic-dot on" id="mic-dot2"></div><div class="mic-txt">Ouvindo quique</div></div>
-      <div class="mic-meter"><div class="mic-meter-fill" id="mic-meter2"></div></div>
-      <div class="cpbtn-row">
-        <button class="cpbtn cpbtn-sm" onclick="stopGame()">⏸ Parar</button>
-        <button class="cpbtn cpbtn-sm" onclick="manualBounce()">◉ Marcar</button>
+      <div class="ctrl-card">
+        <div class="mic-status"><div class="mic-dot on" id="mic-dot2"></div><div class="mic-txt">Ouvindo quique</div>
+          <div class="mic-meter"><div class="mic-meter-fill" id="mic-meter2"></div></div></div>
+      </div>
+      <div class="cbtn-row">
+        <button class="cbtn cbtn-sec" onclick="stopGame()">⏸ Parar</button>
+        <button class="cbtn cbtn-go" onclick="manualBounce()">◉ Marcar quique</button>
       </div>
     </div>
 
-    <!-- FRAME CONGELADO (após quique) -->
-    <div id="ui-freeze" style="display:none;flex-direction:column;gap:6px">
-      <div class="itxt" style="font-size:9.5px;color:var(--accent)">Quique detectado! Toque onde a bola caiu ou use os botões:</div>
-      <div class="cpbtn-row">
-        <button class="cpbtn cpbtn-in" onclick="callResult('in')">✓ IN</button>
-        <button class="cpbtn cpbtn-out" onclick="callResult('out')">✕ OUT</button>
+    <!-- FRAME CONGELADO -->
+    <div id="ui-freeze" style="display:none;flex-direction:column;gap:8px">
+      <div class="ibar" style="border:1px solid rgba(200,245,58,.3)">
+        <div class="idot ok"></div>
+        <div class="itxt" style="color:var(--accent)">Quique detectado! Role para cima e toque onde a bola caiu, ou use os botões:</div>
       </div>
-      <button class="cpbtn cpbtn-sm" onclick="resumeGame()">▶ Continuar</button>
+      <div class="cbtn-row">
+        <button class="cbtn cbtn-in" onclick="callResult('in')">✓ IN</button>
+        <button class="cbtn cbtn-out" onclick="callResult('out')">✕ OUT</button>
+      </div>
+      <button class="cbtn cbtn-sec" onclick="resumeGame()">▶ Continuar sem marcar</button>
     </div>
   </div>
 </div>
@@ -237,12 +285,12 @@ input[type=range]{width:100%;height:20px}
 <div class="screen off" id="sc-guide">
   <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
     <div style="font-size:15px;font-weight:700">Guia</div>
-    <button class="cpbtn-sm" style="width:auto;padding:6px 12px" onclick="showScreen('sc-home')">Fechar</button>
+    <button class="cbtn-sec" style="width:auto;padding:6px 14px" onclick="showScreen('sc-home')">Fechar</button>
   </div>
-  <div class="gs"><div class="gsn">1</div><div><div class="gst">Celular no poste, paisagem</div><div class="gss">Lente ultra-wide 0.5x, ~1,12m do solo, apontada para a metade oposta.</div></div></div>
-  <div class="gs"><div class="gsn">2</div><div><div class="gst">Alinhe a malha virtual</div><div class="gss">Arraste os 4 cantos até a grade coincidir com as linhas brancas reais da quadra. Use a grade densa para conferir.</div></div></div>
-  <div class="gs"><div class="gsn">3</div><div><div class="gst">Microfone perto da quadra</div><div class="gss">Conecte um microfone (lapela USB) e posicione perto da linha de fundo para captar o quique.</div></div></div>
-  <div class="gs"><div class="gsn">4</div><div><div class="gst">O quique congela o frame</div><div class="gss">Ao ouvir o quique, o sistema congela a imagem com a malha. Toque onde a bola caiu — o sistema diz IN ou OUT.</div></div></div>
+  <div class="gs"><div class="gsn">1</div><div><div class="gst">Celular no poste, paisagem</div><div class="gss">Lente ultra-wide 0.5x, ~1,12m, apontada para a metade oposta.</div></div></div>
+  <div class="gs"><div class="gsn">2</div><div><div class="gst">Dois mapas independentes</div><div class="gss">Ajuste o mapa dos LIMITES DA QUADRA e o mapa da ÁREA DE SAQUE separadamente. A distorção da lente exige ajuste próprio para cada região.</div></div></div>
+  <div class="gs"><div class="gsn">3</div><div><div class="gst">Arraste as alças</div><div class="gss">Em cada mapa, arraste os 4 cantos até as linhas coloridas coincidirem com as linhas brancas. Role a tela para alcançar alças e botões.</div></div></div>
+  <div class="gs"><div class="gsn">4</div><div><div class="gst">Microfone capta o quique</div><div class="gss">O quique congela o frame. Toque onde a bola caiu — o sistema diz IN ou OUT.</div></div></div>
 </div>
 
 <script>
@@ -252,20 +300,27 @@ const hl=L/2,hwd=Wd/2,hws=Ws/2;
 
 let myPost='A',matchMode='singles';
 let gameRunning=false,currentPhase='serve',serveAttempt=1;
-/* Saque diagonal: alterna a cada ponto.
-   serveSide 'deuce' (direita do sacador) → saque cai no box "par" da metade julgada
-   serveSide 'ad'    (esquerda do sacador) → saque cai no box "ímpar"
-   Como cada câmera julga a metade oposta, o box esperado é o que fica
-   do lado correspondente. O usuário pode inverter se sair de sincronia. */
-let serveSide='deuce'; // alterna deuce↔ad a cada ponto
-let expectedBoxFlip=false; // correção manual caso a orientação esteja invertida
-let H=null,Hinv=null,calibrated=false;
+let serveSide='deuce',expectedBoxFlip=false;
+let calibrated=false,frozen=false;
+let activeMap='court'; // 'court' ou 'svc' — qual mapa está sendo ajustado
 let calAnimId=null;
-const WORLD_CORNERS=[[0,0],[L,0],[L,hws],[0,hws]];
-let handles=[{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}];
-let frozen=false;
 
-/* áudio */
+/* DOIS MAPAS INDEPENDENTES, cada um com sua homografia e alças
+   Mapa COURT: limites da quadra
+     mundo: u=0..L (comprimento), v=0 (central)..vMax (simples/duplas)
+     cantos: [0,0][L,0][L,hws][0,hws]  (fundos)
+   Mapa SVC: área de saque
+     mundo local próprio: u=0..(2*SVC) mapeando de hl-SVC a hl+SVC
+     v=0 (central)..hws (simples)
+     cantos nos 4 vértices da área de saque: rede-centro, linha-centro, linha-lateral, rede-lateral */
+const COURT_CORNERS=[[0,0],[L,0],[L,hws],[0,hws]];
+const SVC_CORNERS=[[hl-SVC,0],[hl+SVC,0],[hl+SVC,hws],[hl-SVC,hws]];
+
+let courtH=null,courtHinv=null;
+let svcH=null,svcHinv=null;
+let courtHandles=[{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}];
+let svcHandles=[{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}];
+
 let audioCtx=null,analyser=null,micData=null,micRAF=null,micActive=false;
 let lastBounceT=0;const BOUNCE_CD=700;
 
@@ -274,11 +329,9 @@ const canvas=document.getElementById('cam-canvas');
 const ctx=canvas.getContext('2d');
 const freezeCanvas=document.getElementById('freeze-canvas');
 
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));
   const el=document.getElementById(id);el.classList.remove('off');
-  if(id==='cam-screen')el.style.display='grid';
-}
+  if(id==='cam-screen')el.style.display='flex';}
 function setInfo(t,x){document.getElementById('idot').className='idot '+t;document.getElementById('itxt').textContent=x;}
 function toast(m,d=2000){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),d);}
@@ -286,7 +339,7 @@ function speak(x){try{const u=new SpeechSynthesisUtterance(x);u.lang='en-US';u.r
 function showBanner(x,c){const b=document.getElementById('banner');document.getElementById('banner-txt').textContent=x;
   document.getElementById('banner-txt').style.color=c||'white';b.classList.add('show');
   clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('show'),1300);}
-function showPanel(id){['ui-adjust','ui-pregame','ui-game','ui-freeze'].forEach(p=>
+function showPanel(id){['ui-calib','ui-pregame','ui-game','ui-freeze'].forEach(p=>
   document.getElementById(p).style.display=p===id?'flex':'none');}
 
 function selPost(p){myPost=p;['a','b'].forEach(x=>{
@@ -296,20 +349,16 @@ function selPost(p){myPost=p;['a','b'].forEach(x=>{
 function selMode(m){matchMode=m;document.getElementById('mode-s').classList.toggle('sel',m==='singles');
   document.getElementById('mode-d').classList.toggle('sel',m==='doubles');}
 
-async function checkCam(){
-  try{const devs=await navigator.mediaDevices.enumerateDevices();
-    const ok=devs.some(d=>d.kind==='videoinput');
-    const el=document.getElementById('cam-status');
-    const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),saf=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if(ios&&!saf){el.className='alert ae';el.textContent='⚠ No iPhone use Safari';}
-    else if(ok){el.className='alert ao';el.textContent='✓ Câmera pronta';document.getElementById('btn-cam').disabled=false;}
-    else el.textContent='⚠ Câmera não encontrada';
-  }catch(e){document.getElementById('cam-status').textContent='Erro: '+e.message;}
-}
+async function checkCam(){try{const devs=await navigator.mediaDevices.enumerateDevices();
+  const ok=devs.some(d=>d.kind==='videoinput');const el=document.getElementById('cam-status');
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),saf=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if(ios&&!saf){el.className='alert ae';el.textContent='⚠ No iPhone use Safari';}
+  else if(ok){el.className='alert ao';el.textContent='✓ Câmera pronta';document.getElementById('btn-cam').disabled=false;}
+  else el.textContent='⚠ Câmera não encontrada';
+}catch(e){document.getElementById('cam-status').textContent='Erro: '+e.message;}}
 checkCam();
 
-async function openCam(){
-  showScreen('cam-screen');
+async function openCam(){showScreen('cam-screen');
   try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:'environment'},
     width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}}});
     video.srcObject=s;await new Promise(r=>{video.onloadedmetadata=r});
@@ -317,312 +366,266 @@ async function openCam(){
   }catch(e){try{const s2=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
     video.srcObject=s2;await new Promise(r=>{video.onloadedmetadata=r});
     canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720;startCal();
-  }catch(e2){setInfo('err','Erro câmera: '+e2.message);}}
-}
+  }catch(e2){setInfo('err','Erro câmera: '+e2.message);}}}
 
-/* ═══ CALIBRAÇÃO: MALHA AJUSTÁVEL ═══ */
+/* ═══ CALIBRAÇÃO ═══ */
 function startCal(){
-  calibrated=false;frozen=false;
-  showPanel('ui-adjust');
+  calibrated=false;frozen=false;activeMap='court';
+  showPanel('ui-calib');
   document.getElementById('cp-badge').textContent='Calibrar';
   document.getElementById('cp-badge').className='badge badge-cal';
-  setInfo('warn','Arraste as alças até a\nmalha bater nas linhas');
-  initHandles();computeHomography();showHandles();
+  initCourtHandles();initSvcHandles();
+  computeCourtH();computeSvcH();
+  switchMap('court');
   cancelAnimationFrame(calAnimId);calAnimId=requestAnimationFrame(drawLoop);
 }
-function initHandles(){
-  // Estimativa inicial: um trapézio de perspectiva centrado na tela
-  const w=canvas.width,h=canvas.height;
-  handles[0]={x:w*0.30,y:h*0.42}; // fundo B central (perto)
-  handles[1]={x:w*0.70,y:h*0.42}; // fundo A central
-  handles[2]={x:w*0.82,y:h*0.72}; // fundo A lateral
-  handles[3]={x:w*0.18,y:h*0.72}; // fundo B lateral
-}
-function resetHandles(){initHandles();computeHomography();positionHandleEls();}
 
-function computeHomography(){
-  const src=WORLD_CORNERS,dst=handles.map(h=>[h.x,h.y]);
+function initCourtHandles(){const w=canvas.width,h=canvas.height;
+  courtHandles[0]={x:w*0.28,y:h*0.40};courtHandles[1]={x:w*0.72,y:h*0.40};
+  courtHandles[2]={x:w*0.88,y:h*0.80};courtHandles[3]={x:w*0.12,y:h*0.80};}
+function initSvcHandles(){const w=canvas.width,h=canvas.height;
+  svcHandles[0]={x:w*0.38,y:h*0.36};svcHandles[1]={x:w*0.62,y:h*0.36};
+  svcHandles[2]={x:w*0.70,y:h*0.58};svcHandles[3]={x:w*0.30,y:h*0.58};}
+
+function switchMap(which){
+  activeMap=which;
+  document.getElementById('tab-court').className='map-tab'+(which==='court'?' active-court':'');
+  document.getElementById('tab-svc').className='map-tab'+(which==='svc'?' active-svc':'');
+  const title=document.getElementById('map-ctrl-title');
+  const hint=document.getElementById('map-ctrl-hint');
+  if(which==='court'){
+    title.innerHTML='<span class="dot" style="background:var(--red)"></span>Ajuste dos limites da quadra';
+    hint.textContent='Arraste as 4 alças até o contorno vermelho coincidir com as linhas de fundo e laterais. Role para cima para ver as alças.';
+  }else{
+    title.innerHTML='<span class="dot" style="background:var(--amber)"></span>Ajuste da área de saque';
+    hint.textContent='Arraste as 4 alças amarelas até coincidir com as linhas dos boxes de saque. Role para cima para ver as alças.';
+  }
+  showActiveHandles();
+}
+
+/* Homografias */
+function computeH(corners,handles){
   const A=[],b=[];
-  for(let i=0;i<4;i++){const [u,v]=src[i],[x,y]=dst[i];
+  for(let i=0;i<4;i++){const [u,v]=corners[i],[x,y]=handles[i].x!==undefined?[handles[i].x,handles[i].y]:handles[i];
     A.push([u,v,1,0,0,0,-u*x,-v*x]);b.push(x);
     A.push([0,0,0,u,v,1,-u*y,-v*y]);b.push(y);}
-  const hh=solve8(A,b);if(!hh)return;
-  H=[[hh[0],hh[1],hh[2]],[hh[3],hh[4],hh[5]],[hh[6],hh[7],1]];
-  Hinv=invert3(H);
+  const hh=solve8(A,b);if(!hh)return null;
+  return [[hh[0],hh[1],hh[2]],[hh[3],hh[4],hh[5]],[hh[6],hh[7],1]];
 }
+function computeCourtH(){courtH=computeH(COURT_CORNERS,courtHandles);courtHinv=courtH?invert3(courtH):null;}
+function computeSvcH(){svcH=computeH(SVC_CORNERS,svcHandles);svcHinv=svcH?invert3(svcH):null;}
+
 function solve8(A,b){const n=8,M=A.map((r,i)=>[...r,b[i]]);
   for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;
     if(Math.abs(M[p][c])<1e-10)return null;[M[c],M[p]]=[M[p],M[c]];
-    for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/M[c][c];
-      for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}
+    for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/M[c][c];for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}
   return M.map((r,i)=>r[n]/r[i]);}
 function invert3(m){const[a,b,c]=m[0],[d,e,f]=m[1],[g,h2,i]=m[2];
   const det=a*(e*i-f*h2)-b*(d*i-f*g)+c*(d*h2-e*g);if(Math.abs(det)<1e-12)return null;
   const s=1/det;return[[(e*i-f*h2)*s,(c*h2-b*i)*s,(b*f-c*e)*s],
     [(f*g-d*i)*s,(a*i-c*g)*s,(c*d-a*f)*s],[(d*h2-e*g)*s,(b*g-a*h2)*s,(a*e-b*d)*s]];}
-function w2p(u,v){if(!H)return null;const w=H[2][0]*u+H[2][1]*v+H[2][2];
-  return{x:(H[0][0]*u+H[0][1]*v+H[0][2])/w,y:(H[1][0]*u+H[1][1]*v+H[1][2])/w};}
-function p2w(x,y){if(!Hinv)return null;const w=Hinv[2][0]*x+Hinv[2][1]*y+Hinv[2][2];
-  return{u:(Hinv[0][0]*x+Hinv[0][1]*y+Hinv[0][2])/w,v:(Hinv[1][0]*x+Hinv[1][1]*y+Hinv[1][2])/w};}
-
-/* Box de saque esperado conforme o lado (deuce/ad).
-   A metade julgada tem 2 boxes divididos pela linha central de saque (v=hws/2):
-   - box "near-center": v de 0 a hws/2 (colado na linha central da quadra)
-   - box "near-side":   v de hws/2 a hws (colado na linha de simples)
-   O comprimento do box vai da rede (u=hl) até a linha de saque.
-   Como a câmera julga um lado da rede, usamos o box entre a rede e a linha de saque
-   do lado que aparece na imagem. Assumimos o box próximo à rede: u de hl a hl-SVC
-   (ou hl a hl+SVC — ambos são desenhados; o relevante é a metade em v).
-   A diagonal: deuce → um box, ad → o outro. Flip corrige orientação. */
-function expectedServeBox(){
-  if(!H) return null;
-  // qual metade em v: deuce vs ad (com correção de flip)
-  let nearCenter = (serveSide==='deuce');
-  if(expectedBoxFlip) nearCenter=!nearCenter;
-  const v0 = nearCenter ? 0 : hws/2;
-  const v1 = nearCenter ? hws/2 : hws;
-  // box cobre TODO o comprimento da área de saque dos dois lados da rede
-  // (a bola pode cair em qualquer um dos boxes de saque em u, mas só na metade v correta)
-  return {u0:hl-SVC, u1:hl+SVC, v0, v1};
-}
+function applyH(Hm,u,v){if(!Hm)return null;const w=Hm[2][0]*u+Hm[2][1]*v+Hm[2][2];
+  return{x:(Hm[0][0]*u+Hm[0][1]*v+Hm[0][2])/w,y:(Hm[1][0]*u+Hm[1][1]*v+Hm[1][2])/w};}
+function courtW2P(u,v){return applyH(courtH,u,v);}
+function courtP2W(x,y){return applyH(courtHinv,x,y)&&{u:applyH(courtHinv,x,y).x,v:applyH(courtHinv,x,y).y};}
+function svcW2P(u,v){return applyH(svcH,u,v);}
+function svcP2W(x,y){const r=applyH(svcHinv,x,y);return r&&{u:r.x,v:r.y};}
+function courtP2Wpt(x,y){const r=applyH(courtHinv,x,y);return r&&{u:r.x,v:r.y};}
 
 /* ═══ ALÇAS ═══ */
 function canvasToScreen(cx,cy){return{x:cx*(video.clientWidth/canvas.width),y:cy*(video.clientHeight/canvas.height)};}
 function screenToCanvas(sx,sy){return{x:sx*(canvas.width/video.clientWidth),y:sy*(canvas.height/video.clientHeight)};}
-function positionHandleEls(){for(let i=0;i<4;i++){const el=document.getElementById('h'+i);
-  const s=canvasToScreen(handles[i].x,handles[i].y);el.style.left=s.x+'px';el.style.top=s.y+'px';}}
-function showHandles(){positionHandleEls();for(let i=0;i<4;i++)document.getElementById('h'+i).classList.add('show');}
-function hideHandles(){for(let i=0;i<4;i++)document.getElementById('h'+i).classList.remove('show');}
+function activeHandles(){return activeMap==='court'?courtHandles:svcHandles;}
+function activePrefix(){return activeMap==='court'?'hc':'hs';}
+function positionHandleEls(){
+  const hs=activeHandles(),pf=activePrefix();
+  for(let i=0;i<4;i++){const el=document.getElementById(pf+i);
+    const s=canvasToScreen(hs[i].x,hs[i].y);el.style.left=s.x+'px';el.style.top=s.y+'px';}}
+function showActiveHandles(){
+  ['hc','hs'].forEach(pf=>{for(let i=0;i<4;i++)document.getElementById(pf+i).classList.remove('show');});
+  const pf=activePrefix();for(let i=0;i<4;i++)document.getElementById(pf+i).classList.add('show');
+  positionHandleEls();}
+function hideAllHandles(){['hc','hs'].forEach(pf=>{for(let i=0;i<4;i++)document.getElementById(pf+i).classList.remove('show');});}
+function resetActiveMap(){
+  if(activeMap==='court'){initCourtHandles();computeCourtH();}
+  else{initSvcHandles();computeSvcH();}
+  positionHandleEls();toast('Mapa reposicionado');}
 
-let dragIdx=-1;
-for(let i=0;i<4;i++){const el=document.getElementById('h'+i);
-  el.addEventListener('pointerdown',e=>{e.preventDefault();dragIdx=i;el.classList.add('dragging');el.setPointerCapture(e.pointerId);});
-  el.addEventListener('pointermove',e=>{if(dragIdx!==i)return;e.preventDefault();
-    const rect=document.getElementById('cam-area').getBoundingClientRect();
-    const c=screenToCanvas(e.clientX-rect.left,e.clientY-rect.top);
-    handles[i].x=Math.max(0,Math.min(canvas.width,c.x));handles[i].y=Math.max(0,Math.min(canvas.height,c.y));
-    positionHandleEls();computeHomography();});
-  el.addEventListener('pointerup',()=>{dragIdx=-1;el.classList.remove('dragging');});
-  el.addEventListener('pointercancel',()=>{dragIdx=-1;el.classList.remove('dragging');});
-}
+/* Drag para os 8 handles */
+['hc','hs'].forEach(pf=>{
+  for(let i=0;i<4;i++){const el=document.getElementById(pf+i);let dragging=false;
+    el.addEventListener('pointerdown',e=>{e.preventDefault();dragging=true;el.classList.add('dragging');el.setPointerCapture(e.pointerId);});
+    el.addEventListener('pointermove',e=>{if(!dragging)return;e.preventDefault();
+      const rect=document.getElementById('cam-area').getBoundingClientRect();
+      const c=screenToCanvas(e.clientX-rect.left,e.clientY-rect.top);
+      const hs=pf==='hc'?courtHandles:svcHandles;
+      hs[i].x=Math.max(0,Math.min(canvas.width,c.x));hs[i].y=Math.max(0,Math.min(canvas.height,c.y));
+      const s=canvasToScreen(hs[i].x,hs[i].y);el.style.left=s.x+'px';el.style.top=s.y+'px';
+      if(pf==='hc')computeCourtH();else computeSvcH();});
+    el.addEventListener('pointerup',()=>{dragging=false;el.classList.remove('dragging');});
+    el.addEventListener('pointercancel',()=>{dragging=false;el.classList.remove('dragging');});
+  }
+});
 
-/* ═══ DESENHO DA MALHA ═══ */
+/* ═══ DESENHO ═══ */
 function drawGrid(context){
-  if(!H)return;
   const c=context||ctx;
-  const green='rgba(200,245,58,.95)',dim='rgba(200,245,58,.35)';
-  function line(u1,v1,u2,v2,col,w,dash){const a=w2p(u1,v1),b=w2p(u2,v2);if(!a||!b)return;
-    c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle=col;c.lineWidth=w;
-    c.setLineDash(dash||[]);c.stroke();c.setLineDash([]);}
-  const vDup=matchMode==='doubles'?hwd:hws;
   const density=parseInt(document.getElementById('grid-density').value||2);
-  // Grade interna densa
-  const stepU=density===1?4:density===2?2:density===3?1:0.5;
-  for(let u=0;u<=L+0.01;u+=stepU)line(u,0,u,vDup,dim,.6,[3,4]);
-  const stepV=density>=3?0.5:1;
-  for(let v=0;v<=vDup+0.01;v+=stepV)line(0,v,L,v,dim,.6,[3,4]);
-  // Contorno principal
-  line(0,0,L,0,green,2.5);line(0,hws,L,hws,green,2.5);
-  line(0,0,0,vDup,green,2.5);line(L,0,L,vDup,green,2.5);
-  // Saque — linhas dos dois boxes
-  line(hl-SVC,0,hl-SVC,hws,'rgba(234,179,8,.95)',2);
-  line(hl+SVC,0,hl+SVC,hws,'rgba(234,179,8,.95)',2);
-  // Linha central de saque (divide os dois boxes da metade julgada)
-  line(hl-SVC,hws/2,hl+SVC,hws/2,'rgba(234,179,8,.7)',1.5);
-  // Destaque do BOX ESPERADO durante o saque
-  if(gameRunning&&currentPhase==='serve'){
-    const box=expectedServeBox();
-    if(box){
-      const a=w2p(box.u0,box.v0),b2=w2p(box.u1,box.v0),
-            cc=w2p(box.u1,box.v1),d=w2p(box.u0,box.v1);
-      if(a&&b2&&cc&&d){
-        c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b2.x,b2.y);
-        c.lineTo(cc.x,cc.y);c.lineTo(d.x,d.y);c.closePath();
-        c.fillStyle='rgba(234,179,8,.22)';c.fill();
-        c.strokeStyle='rgba(234,179,8,1)';c.lineWidth=2.5;c.stroke();
-        // rótulo
-        const mx=(a.x+cc.x)/2,my=(a.y+cc.y)/2;
-        c.fillStyle='rgba(234,179,8,1)';c.font='bold 13px sans-serif';c.textAlign='center';
-        c.fillText('SAQUE AQUI',mx,my);c.textAlign='left';
-      }
+  const vDup=matchMode==='doubles'?hwd:hws;
+  function cline(u1,v1,u2,v2,col,w,dash){const a=courtW2P(u1,v1),b=courtW2P(u2,v2);if(!a||!b)return;
+    c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.stroke();c.setLineDash([]);}
+  function sline(u1,v1,u2,v2,col,w,dash){const a=svcW2P(u1,v1),b=svcW2P(u2,v2);if(!a||!b)return;
+    c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.stroke();c.setLineDash([]);}
+
+  // ── MAPA QUADRA (vermelho) ──
+  if(courtH){
+    const dim='rgba(239,68,68,.3)';
+    const stepU=density===1?4:density===2?2:density===3?1:0.5;
+    for(let u=0;u<=L+.01;u+=stepU)cline(u,0,u,vDup,dim,.6,[3,4]);
+    const stepV=density>=3?0.5:1;
+    for(let v=0;v<=vDup+.01;v+=stepV)cline(0,v,L,v,dim,.6,[3,4]);
+    const main=activeMap==='court'?'rgba(239,68,68,1)':'rgba(239,68,68,.55)';
+    const lw=activeMap==='court'?2.5:1.5;
+    cline(0,0,L,0,main,lw);cline(0,hws,L,hws,main,lw);
+    cline(0,0,0,vDup,main,lw);cline(L,0,L,vDup,main,lw);
+    cline(hl,0,hl,vDup,'rgba(255,255,255,.5)',1.3,[8,5]); // rede
+    if(matchMode==='doubles'){cline(0,hwd,L,hwd,'rgba(168,85,247,.85)',1.8);
+      cline(0,hws,0,hwd,'rgba(168,85,247,.85)',1.8);cline(L,hws,L,hwd,'rgba(168,85,247,.85)',1.8);}
+  }
+  // ── MAPA SAQUE (amarelo) — homografia própria ──
+  if(svcH){
+    const main=activeMap==='svc'?'rgba(234,179,8,1)':'rgba(234,179,8,.55)';
+    const lw=activeMap==='svc'?2.5:1.5;
+    // contorno da área de saque (mundo local: u de hl-SVC a hl+SVC, v de 0 a hws)
+    sline(hl-SVC,0,hl+SVC,0,main,lw);sline(hl-SVC,hws,hl+SVC,hws,main,lw);
+    sline(hl-SVC,0,hl-SVC,hws,main,lw);sline(hl+SVC,0,hl+SVC,hws,main,lw);
+    // linha central de saque (divide os dois boxes)
+    sline(hl-SVC,hws/2,hl+SVC,hws/2,main,lw*.8);
+    // linha da rede no meio
+    sline(hl,0,hl,hws,'rgba(255,255,255,.5)',1.2,[6,4]);
+    // grade interna do saque quando ativo
+    if(activeMap==='svc'){
+      const dim='rgba(234,179,8,.3)';
+      for(let u=hl-SVC;u<=hl+SVC+.01;u+=1)sline(u,0,u,hws,dim,.5,[2,3]);
+      for(let v=0;v<=hws+.01;v+=0.5)sline(hl-SVC,v,hl+SVC,v,dim,.5,[2,3]);
+    }
+    // destaque do box esperado no jogo
+    if(gameRunning&&currentPhase==='serve'){
+      const box=expectedServeBox();
+      if(box){const a=svcW2P(box.u0,box.v0),b2=svcW2P(box.u1,box.v0),cc=svcW2P(box.u1,box.v1),d=svcW2P(box.u0,box.v1);
+        if(a&&b2&&cc&&d){c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b2.x,b2.y);c.lineTo(cc.x,cc.y);c.lineTo(d.x,d.y);c.closePath();
+          c.fillStyle='rgba(234,179,8,.22)';c.fill();c.strokeStyle='rgba(234,179,8,1)';c.lineWidth=2.5;c.stroke();
+          const mx=(a.x+cc.x)/2,my=(a.y+cc.y)/2;c.fillStyle='rgba(234,179,8,1)';c.font='bold 13px sans-serif';c.textAlign='center';
+          c.fillText('SAQUE AQUI',mx,my);c.textAlign='left';}}
     }
   }
-  // Rede
-  line(hl,0,hl,vDup,'rgba(255,255,255,.55)',1.5,[8,5]);
-  // Duplas
-  if(matchMode==='doubles'){line(0,hwd,L,hwd,'rgba(168,85,247,.95)',2);
-    line(0,hws,0,hwd,'rgba(168,85,247,.95)',2);line(L,hws,L,hwd,'rgba(168,85,247,.95)',2);}
 }
-function drawLoop(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawGrid(ctx);
-  if(!calibrated)positionHandleEls();
-  if(!frozen)calAnimId=requestAnimationFrame(drawLoop);
-}
+function drawLoop(){ctx.clearRect(0,0,canvas.width,canvas.height);drawGrid(ctx);
+  if(!calibrated)positionHandleEls();if(!frozen)calAnimId=requestAnimationFrame(drawLoop);}
 
-function confirmMap(){
-  if(!H){toast('⚠ Ajuste as alças');return;}
-  calibrated=true;hideHandles();showPanel('ui-pregame');
+function confirmCalibration(){
+  if(!courtH||!svcH){toast('⚠ Ajuste os dois mapas');return;}
+  calibrated=true;hideAllHandles();showPanel('ui-pregame');
   document.getElementById('cp-badge').textContent='Pronto';
-  setInfo('ok','Malha fixada!\nConecte o microfone e\ninicie o jogo.');
-  speak('Calibração completa');toast('🎯 Malha calibrada');
+  setInfo('ok','Mapas fixados!\nConecte o microfone e inicie.');
+  speak('Calibração completa');toast('🎯 Dois mapas calibrados');
   initMic();
 }
-function backToAdjust(){calibrated=false;showPanel('ui-adjust');showHandles();
-  setInfo('warn','Ajuste as alças');cancelAnimationFrame(calAnimId);drawLoop();}
+function backToCalib(){calibrated=false;showPanel('ui-calib');switchMap(activeMap);
+  setInfo('warn','Ajuste os mapas');cancelAnimationFrame(calAnimId);drawLoop();}
 
-/* ═══ ÁUDIO — detecção do quique ═══ */
-async function initMic(){
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:{
-      echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const src=audioCtx.createMediaStreamSource(stream);
-    analyser=audioCtx.createAnalyser();
-    analyser.fftSize=1024;analyser.smoothingTimeConstant=0;
-    src.connect(analyser);
-    micData=new Uint8Array(analyser.fftSize);
-    micActive=true;
-    document.getElementById('mic-dot').classList.add('on');
-    document.getElementById('mic-txt').textContent='Microfone OK';
-    monitorMic();
-  }catch(e){
-    document.getElementById('mic-txt').textContent='Sem microfone';
-    setInfo('warn','Microfone não conectado.\nUse "Marcar" manual no jogo.');
-  }
+/* Box de saque esperado (no sistema de coordenadas do mapa SVC) */
+function expectedServeBox(){
+  if(!svcH)return null;
+  let nearCenter=(serveSide==='deuce');
+  if(expectedBoxFlip)nearCenter=!nearCenter;
+  const v0=nearCenter?0:hws/2,v1=nearCenter?hws/2:hws;
+  return {u0:hl-SVC,u1:hl+SVC,v0,v1};
 }
-function monitorMic(){
-  if(!micActive)return;
-  micRAF=requestAnimationFrame(monitorMic);
-  analyser.getByteTimeDomainData(micData);
-  // energia do sinal (pico)
-  let peak=0;
+
+/* ═══ ÁUDIO ═══ */
+async function initMic(){try{
+  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const src=audioCtx.createMediaStreamSource(stream);
+  analyser=audioCtx.createAnalyser();analyser.fftSize=1024;analyser.smoothingTimeConstant=0;
+  src.connect(analyser);micData=new Uint8Array(analyser.fftSize);micActive=true;
+  document.getElementById('mic-dot').classList.add('on');document.getElementById('mic-txt').textContent='Microfone OK';
+  monitorMic();
+}catch(e){document.getElementById('mic-txt').textContent='Sem microfone (use Marcar)';
+  setInfo('warn','Sem microfone.\nUse "Marcar quique" manual.');}}
+function monitorMic(){if(!micActive)return;micRAF=requestAnimationFrame(monitorMic);
+  analyser.getByteTimeDomainData(micData);let peak=0;
   for(let i=0;i<micData.length;i++){const v=Math.abs(micData[i]-128);if(v>peak)peak=v;}
-  const level=peak/128; // 0..1
-  const pct=Math.min(100,level*200);
+  const level=peak/128,pct=Math.min(100,level*200);
   const m1=document.getElementById('mic-meter'),m2=document.getElementById('mic-meter2');
   if(m1)m1.style.width=pct+'%';if(m2)m2.style.width=pct+'%';
-  // detecção de transiente (quique) durante o jogo
-  if(gameRunning&&!frozen){
-    const sens=parseInt(document.getElementById('mic-sens').value||6);
-    const threshold=1-(sens/12); // sens alto = threshold baixo = mais sensível
-    if(level>threshold && Date.now()-lastBounceT>BOUNCE_CD){
-      lastBounceT=Date.now();
-      onBounceDetected();
-    }
-  }
-}
+  if(gameRunning&&!frozen){const sens=parseInt(document.getElementById('mic-sens').value||6);
+    const threshold=1-(sens/12);
+    if(level>threshold&&Date.now()-lastBounceT>BOUNCE_CD){lastBounceT=Date.now();onBounceDetected();}}}
 
 /* ═══ JOGO ═══ */
-function startGame(){
-  gameRunning=true;currentPhase='serve';serveAttempt=1;frozen=false;
-  serveSide='deuce';
+function startGame(){gameRunning=true;currentPhase='serve';serveAttempt=1;frozen=false;serveSide='deuce';
   showPanel('ui-game');updatePhaseUI();updateServeSideUI();
-  setInfo('ok','Ouvindo o quique.\nPode jogar!');
-  speak('Jogo iniciado');toast('▶ Jogo iniciado');
-  if(!micActive)initMic();
-}
-function stopGame(){gameRunning=false;showPanel('ui-pregame');
-  setInfo('ok','Jogo parado.');toast('⏸ Parado');}
-function resetServe(){currentPhase='serve';serveAttempt=1;updatePhaseUI();}
-function updateServeSideUI(){
-  const el=document.getElementById('serve-side-txt');
-  if(el) el.textContent=serveSide==='deuce'?'Deuce (dir)':'Ad (esq)';
-}
-function updatePhaseUI(){
-  const bar=document.getElementById('phase-bar'),badge=document.getElementById('cp-badge');
+  setInfo('ok','Ouvindo o quique.\nPode jogar!');speak('Jogo iniciado');toast('▶ Jogo iniciado');
+  if(!micActive)initMic();}
+function stopGame(){gameRunning=false;showPanel('ui-pregame');setInfo('ok','Jogo parado.');toast('⏸ Parado');}
+function updateServeSideUI(){const el=document.getElementById('serve-side-txt');
+  if(el)el.textContent=serveSide==='deuce'?'Deuce (dir)':'Ad (esq)';}
+function updatePhaseUI(){const bar=document.getElementById('phase-bar'),badge=document.getElementById('cp-badge');
   updateServeSideUI();
   if(currentPhase==='serve'){bar.className='phase-bar phase-serve';bar.textContent=`🎾 SAQUE ${serveAttempt}ª`;
     badge.className='badge badge-srv';badge.textContent=serveAttempt===1?'1º Saque':'2º Saque';}
-  else{bar.className='phase-bar phase-rally';bar.textContent='🏃 EM JOGO';
-    badge.className='badge badge-rly';badge.textContent='Em jogo';}
-}
+  else{bar.className='phase-bar phase-rally';bar.textContent='🏃 EM JOGO';badge.className='badge badge-rly';badge.textContent='Em jogo';}}
+function setServeSide(s){serveSide=s;updateServeSideUI();}
+function flipServeBox(){expectedBoxFlip=!expectedBoxFlip;toast('Box de saque invertido');}
+function nextPoint(){currentPhase='serve';serveAttempt=1;serveSide=serveSide==='deuce'?'ad':'deuce';
+  toast('Próximo saque: '+(serveSide==='deuce'?'Deuce (dir)':'Ad (esq)'),2500);}
 
-/* Quique detectado (áudio) OU manual → congela frame */
-function onBounceDetected(){
-  freezeFrame();
-  speak('Bounce');
-  toast('🔊 Quique detectado');
-}
+function onBounceDetected(){freezeFrame();speak('Bounce');toast('🔊 Quique detectado');}
 function manualBounce(){lastBounceT=Date.now();onBounceDetected();}
 
-function freezeFrame(){
-  frozen=true;
-  cancelAnimationFrame(calAnimId);
-  // Desenha o frame atual + malha no freeze canvas
+function freezeFrame(){frozen=true;cancelAnimationFrame(calAnimId);
   freezeCanvas.width=canvas.width;freezeCanvas.height=canvas.height;
-  const fctx=freezeCanvas.getContext('2d');
-  fctx.drawImage(video,0,0,freezeCanvas.width,freezeCanvas.height);
-  drawGrid(fctx);
-  freezeCanvas.classList.add('show');
-  showPanel('ui-freeze');
+  const fctx=freezeCanvas.getContext('2d');fctx.drawImage(video,0,0,freezeCanvas.width,freezeCanvas.height);
+  drawGrid(fctx);freezeCanvas.classList.add('show');showPanel('ui-freeze');
   document.getElementById('tap-hint').classList.add('show');
-  setInfo('warn','Toque onde a bola caiu\nou use IN/OUT');
-}
+  setInfo('warn','Toque onde a bola caiu\nou use IN/OUT');}
 
-/* Toque no frame congelado → converte via homografia → IN/OUT */
+/* Toque no frame congelado → decide qual mapa usar conforme a fase */
 document.getElementById('cam-area').addEventListener('click',e=>{
   if(!frozen)return;
   const rect=document.getElementById('cam-area').getBoundingClientRect();
-  const sx=e.clientX-rect.left,sy=e.clientY-rect.top;
-  const c=screenToCanvas(sx,sy);
-  const wpt=p2w(c.x,c.y);
-  if(!wpt)return;
-  const {u,v}=wpt;
-  const vMax=matchMode==='doubles'?hwd:hws;
+  const c=screenToCanvas(e.clientX-rect.left,e.clientY-rect.top);
   let valid;
   if(currentPhase==='serve'){
+    // usa mapa de SAQUE
+    const wpt=svcP2W(c.x,c.y);if(!wpt)return;const{u,v}=wpt;
     const box=expectedServeBox();
-    valid = box && u>=box.u0 && u<=box.u1 && v>=box.v0 && v<=box.v1;
-  } else valid=(u>=0&&u<=L&&v>=0&&v<=vMax);
-  // marcador visual no ponto tocado
+    valid=box&&u>=box.u0&&u<=box.u1&&v>=box.v0&&v<=box.v1;
+  }else{
+    // usa mapa da QUADRA
+    const wpt=courtP2Wpt(c.x,c.y);if(!wpt)return;const{u,v}=wpt;
+    const vMax=matchMode==='doubles'?hwd:hws;
+    valid=(u>=0&&u<=L&&v>=0&&v<=vMax);
+  }
   const mk=document.getElementById('tap-marker');
-  mk.style.left=sx+'px';mk.style.top=sy+'px';mk.className=valid?'in':'out';
+  mk.style.left=(e.clientX-rect.left)+'px';mk.style.top=(e.clientY-rect.top)+'px';mk.className=valid?'in':'out';
   callResult(valid?'in':'out',true);
 });
 
-function callResult(res,fromTap){
-  document.getElementById('tap-hint').classList.remove('show');
-  if(res==='out'){
-    speak('Out');showBanner('OUT','#ef4444');
-    if(currentPhase==='serve'){
-      if(serveAttempt===1){serveAttempt=2;toast('🔴 Falta — 2º saque');}
-      else{toast('🔴 Dupla falta');serveAttempt=1;nextPoint();}
-    }else{toast('🔴 OUT — ponto encerrado');nextPoint();}
-  }else{
-    showBanner('IN','#22c55e');
-    if(currentPhase==='serve'){currentPhase='rally';toast('🟢 Saque bom — em jogo');}
-    else toast('🟢 IN');
-  }
-  setTimeout(()=>resumeGame(),res==='out'?1200:800);
-}
+function callResult(res){document.getElementById('tap-hint').classList.remove('show');
+  if(res==='out'){speak('Out');showBanner('OUT','#ef4444');
+    if(currentPhase==='serve'){if(serveAttempt===1){serveAttempt=2;toast('🔴 Falta — 2º saque');}
+      else{toast('🔴 Dupla falta');serveAttempt=1;nextPoint();}}
+    else{toast('🔴 OUT');nextPoint();}}
+  else{showBanner('IN','#22c55e');
+    if(currentPhase==='serve'){currentPhase='rally';toast('🟢 Saque bom — em jogo');}else toast('🟢 IN');}
+  setTimeout(()=>resumeGame(),res==='out'?1200:800);}
 
-/* Ao encerrar um ponto, alterna o lado do saque (deuce ↔ ad) */
-function nextPoint(){
-  currentPhase='serve';serveAttempt=1;
-  serveSide = serveSide==='deuce' ? 'ad' : 'deuce';
-  toast('Próximo saque: '+(serveSide==='deuce'?'lado direito (deuce)':'lado esquerdo (ad)'),2500);
-}
-function flipServeBox(){
-  expectedBoxFlip=!expectedBoxFlip;
-  toast('Box de saque invertido');
-}
-function setServeSide(side){
-  serveSide=side;
-  updateServeSideUI();
-}
-
-function resumeGame(){
-  frozen=false;
-  freezeCanvas.classList.remove('show');
-  document.getElementById('tap-marker').className='';
-  document.getElementById('tap-hint').classList.remove('show');
-  if(currentPhase==='rally'&&document.getElementById('phase-bar').textContent.includes('SAQUE')){}
-  updatePhaseUI();
-  showPanel('ui-game');
-  setInfo('ok','Ouvindo o quique.');
-  drawLoop();
-}
+function resumeGame(){frozen=false;freezeCanvas.classList.remove('show');
+  document.getElementById('tap-marker').className='';document.getElementById('tap-hint').classList.remove('show');
+  updatePhaseUI();showPanel('ui-game');setInfo('ok','Ouvindo o quique.');drawLoop();}
 
 selPost('A');selMode('singles');
 </script>
